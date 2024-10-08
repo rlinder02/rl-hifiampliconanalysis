@@ -25,8 +25,7 @@ workflow QCALIGN {
     emit:
     vec_report            = FCS_FCSADAPTOR.out.adaptor_report      // channel: [ val(meta), [ report ] ]
     nanostats_report      = NANOPLOT.out.txt                       // channel: [ val(meta), [ txt ] ]
-    nanostats_html        = NANOPLOT.out.html                      // channel: [ val(meta), [ html ] ]
-    nanostats_plot        = NANOPLOT.out.png                       // channel: [ val(meta), [ png ] ]
+    nanostats_results     = NANOPLOT.out.nanoplot_results          // channel: [ val(meta), [ results_dir ] ]
     versions              = ch_versions                            // channel: [ versions.yml ]
 }
 

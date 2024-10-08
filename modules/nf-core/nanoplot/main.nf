@@ -11,23 +11,24 @@ process NANOPLOT {
     tuple val(meta), path(ontfile)
 
     output:
-    tuple val(meta), path("*.html")                , emit: html
-    tuple val(meta), path("*.png") , optional: true, emit: png
-    tuple val(meta), path("*.txt")                 , emit: txt
-    tuple val(meta), path("*.log")                 , emit: log
-    path  "versions.yml"                           , emit: versions
+    tuple val(meta), path("${meta.id}_nanoplot")              , emit: nanoplot_results
+    tuple val(meta), path("${meta.id}_nanoplot/*.txt")        , emit: txt
+    path  "versions.yml"                                      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def input_file = ("$ontfile".endsWith(".fastq.gz") || "$ontfile".endsWith(".fq.gz")) ? "--fastq ${ontfile}" :
         ("$ontfile".endsWith(".txt")) ? "--summary ${ontfile}" : ''
     """
     NanoPlot \\
         $args \\
         -t $task.cpus \\
+        -o ${prefix}_nanoplot \\
+        -p $prefix \\
         $input_file
 
     cat <<-END_VERSIONS > versions.yml
