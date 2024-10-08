@@ -3,8 +3,9 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+include { QCALIGN                } from '../subworkflows/local/qcalign'
+include { FILTERCLUSTERCONSENSUS } from '../subworkflows/local/filterclusterconsensus'
 
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -23,19 +24,19 @@ workflow HIFIAMPLICONANALYSIS {
     ch_samplesheet // channel: samplesheet read in from --input
 
     main:
-
+    
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
-    //
-    // MODULE: Run FastQC
-    //
-    FASTQC (
-        ch_samplesheet
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
+    //
+    // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
+    //
+    QCALIGN ( ch_samplesheet )
+
+    ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.nanostats_report.map {it[1]})
+    ch_versions = ch_versions.mix(QCALIGN.out.versions)
+    
     //
     // Collate and save software versions
     //
