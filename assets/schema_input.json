@@ -29,13 +29,13 @@
             },
             "primer1": {
                 "type": "string",
-                "pattern": "^\\[ACTGactg]+$",
-                "errorMessage": "Nucleotide sequence of the forward primer- can be any combination of capitalized or lowercase letters, degenerate seqeunces are not currently supported"
+                "pattern": "^[ACTGactg]+$",
+                "errorMessage": "Nucleotide sequence of the forward primer- can be any combination of capitalized or lowercase letters, degenerate sequences are not currently supported"
             },
             "primer2": {
                 "type": "string",
-                "pattern": "^\\[ACTGactg]+$",
-                "errorMessage": "Nucleotide sequence of the reverse primer- can be any combination of capitalized or lowercase letters, degenerate seqeunces are not currently supported"
+                "pattern": "^[ACTGactg]+$",
+                "errorMessage": "Nucleotide sequence of the reverse primer- can be any combination of capitalized or lowercase letters, degenerate sequences are not currently supported"
             },
             "bed": {
                 "type": "string",
