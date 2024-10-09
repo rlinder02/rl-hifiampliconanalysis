@@ -13,12 +13,12 @@ workflow QCALIGN {
 
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
-    ch_fastq_ref = ch_fastq.combine(ch_ref, by:0)
     ch_versions = Channel.empty()
 
     CONVERTTOFASTA ( ch_fastq )
     ch_versions = ch_versions.mix(CONVERTTOFASTA.out.versions.first())
 
+    // need to change FCS_FCSADAPTOR so if no contaminating sequences found, still outputs a fa.gz file for alignment step
     FCS_FCSADAPTOR ( CONVERTTOFASTA.out.fasta )
     ch_versions = ch_versions.mix(FCS_FCSADAPTOR.out.versions.first())
 
@@ -26,7 +26,7 @@ workflow QCALIGN {
     ch_versions = ch_versions.mix(NANOPLOT.out.versions.first())
 
     ch_fastas = FCS_FCSADAPTOR.out.cleaned_assembly.combine(ch_ref, by:0)
-    ch_fastas.view()
+
     ALIGN ( ch_fastas )
     ch_versions = ch_versions.mix(ALIGN.out.versions.first())
 
