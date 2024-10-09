@@ -25,7 +25,7 @@ workflow QCALIGN {
     ch_versions = ch_versions.mix(NANOPLOT.out.versions.first())
 
     ch_fastas = FCS_FCSADAPTOR.out.cleaned_assembly.combine(ch_ref, by:0)
-
+    ch_fastas.view()
     ALIGN ( ch_fastas )
     ch_versions = ch_versions.mix(ALIGN.out.versions.first())
 
