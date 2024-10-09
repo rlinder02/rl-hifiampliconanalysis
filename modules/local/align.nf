@@ -23,13 +23,12 @@ process ALIGN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     minimap2 \\
-        $args \\
         --eqx \\
         --sam-hit-only \\
         -t $task.cpus \\
         -Y \\
         -a \\
-        -x splice:hq \\ 
+        -x splice:hq \\
         $ref \\
         $fastq \\
     | \\
