@@ -8,7 +8,7 @@ process ALIGN {
         'community.wave.seqera.io/library/minimap2_samtools:7e38c0cfb1291cfb' }"
 
     input:
-    tuple val(meta), path(fasta), path(ref)
+    tuple val(meta), path(fastq), path(ref)
 
     output:
     tuple val(meta), path("*.sorted.fasta"), emit: sorted_fasta
@@ -29,7 +29,20 @@ process ALIGN {
         -Yax splice:hq \\ 
         $args \\
         $ref \\
-        $fasta 
+        $fastq \\
+    | \\
+    samtools \\
+        sort \\
+        $args \\
+        -m4G \\
+        -@ $task.cpus \\
+        -O BAM \\
+        -o ${prefix}.sorted.bam
+    
+    samtools \\
+        fasta \\
+        -@ $task.cpus \\
+        ${prefix}.sorted.bam > ${prefix}.sorted.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
