@@ -29,24 +29,11 @@ process ALIGN {
         -Yax splice:hq \\ 
         $args \\
         $ref \\
-        $fasta \\
-    | \\
-    samtools \\
-        sort \\
-        $args \\
-        -m4G \\
-        -@ $task.cpus \\
-        -O BAM \\
-        -o ${prefix}.sorted.bam
-    
-    samtools \\
-        fasta \\
-        -@ $task.cpus \\
-        ${prefix}.sorted.bam > ${prefix}.sorted.fasta
+        $fasta 
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        align: \$(samtools --version |& sed '1!d ; s/samtools //')
+        samtools: \$(samtools --version |& sed '1!d ; s/samtools //')
     END_VERSIONS
     """
 
@@ -58,7 +45,7 @@ process ALIGN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        align: \$(samtools --version |& sed '1!d ; s/samtools //')
+        samtools: \$(samtools --version |& sed '1!d ; s/samtools //')
     END_VERSIONS
     """
 }
