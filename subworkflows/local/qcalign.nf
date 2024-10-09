@@ -13,6 +13,7 @@ workflow QCALIGN {
 
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
+    ch_fastq_ref = ch_fastq.combine(ch_ref, by:0)
     ch_versions = Channel.empty()
 
     CONVERTTOFASTA ( ch_fastq )
@@ -26,7 +27,7 @@ workflow QCALIGN {
 
     ch_fastas = FCS_FCSADAPTOR.out.cleaned_assembly.combine(ch_ref, by:0)
     ch_fastas.view()
-    ALIGN ( ch_fastas )
+    ALIGN ( ch_fastq_ref )
     ch_versions = ch_versions.mix(ALIGN.out.versions.first())
 
     QUALIMAP_BAMQC ( ALIGN.out.sorted_bam )
