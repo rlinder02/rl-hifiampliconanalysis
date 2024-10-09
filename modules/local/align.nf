@@ -23,17 +23,18 @@ process ALIGN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     minimap2 \\
+        $args \\
         --eqx \\
         --sam-hit-only \\
         -t $task.cpus \\
-        -Yax splice:hq \\ 
-        $args \\
+        -Y \\
+        -a \\
+        -x splice:hq \\ 
         $ref \\
         $fastq \\
     | \\
     samtools \\
         sort \\
-        $args \\
         -m4G \\
         -@ $task.cpus \\
         -O BAM \\
