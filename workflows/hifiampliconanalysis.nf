@@ -34,6 +34,7 @@ workflow HIFIAMPLICONANALYSIS {
     QCALIGN ( ch_samplesheet )
 
     ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.nanostats_report.map {it[1]})
+    ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.bam_qc.map {it[1]})
     ch_versions = ch_versions.mix(QCALIGN.out.versions)
     
     //
