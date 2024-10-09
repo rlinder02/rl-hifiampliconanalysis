@@ -27,7 +27,7 @@ workflow QCALIGN {
 
     ch_fastas = FCS_FCSADAPTOR.out.cleaned_assembly.combine(ch_ref, by:0)
     ch_fastas.view()
-    ALIGN ( ch_fastq_ref )
+    ALIGN ( ch_fastas )
     ch_versions = ch_versions.mix(ALIGN.out.versions.first())
 
     QUALIMAP_BAMQC ( ALIGN.out.sorted_bam )

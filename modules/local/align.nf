@@ -8,7 +8,7 @@ process ALIGN {
         'community.wave.seqera.io/library/minimap2_samtools:7e38c0cfb1291cfb' }"
 
     input:
-    tuple val(meta), path(fastq), path(ref)
+    tuple val(meta), path(fasta), path(ref)
 
     output:
     tuple val(meta), path("*.sorted.fasta"), emit: sorted_fasta
@@ -30,7 +30,7 @@ process ALIGN {
         -a \\
         -x splice:hq \\
         $ref \\
-        $fastq \\
+        $fasta \\
     | \\
     samtools \\
         sort \\
