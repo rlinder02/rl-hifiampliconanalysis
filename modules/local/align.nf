@@ -38,11 +38,6 @@ process ALIGN {
         -@ $task.cpus \\
         -O BAM \\
         -o ${prefix}.sorted.bam
-    
-    samtools \\
-        fasta \\
-        -@ $task.cpus \\
-        ${prefix}.sorted.bam > ${prefix}.sorted.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
