@@ -11,8 +11,8 @@ process FINDPRIMERS {
     tuple val(meta), path(fasta), val(primer1), val(primer2)
 
     output:
-    tuple val(meta), path("_filtered.fasta"), emit: filtered_fasta
-    path "versions.yml"                     , emit: versions
+    tuple val(meta), path("*_filtered.fasta"), emit: filtered_fasta
+    path "versions.yml"                      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
