@@ -72,7 +72,7 @@ def main():
     # create a generator object to iterate through below
     cmd = ["grep", "-c",  ">", fasta]
     res = check_output(cmd, universal_newlines=True)
-    calculate_chunks = res // num_processes
+    calculate_chunks = int(res) // int(num_processes)
     chunk_maker = chunk_iterator(fasta, calculate_chunks)
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         for chunk in chunk_maker:
