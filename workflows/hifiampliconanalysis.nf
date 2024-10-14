@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { QCALIGN                } from '../subworkflows/local/qcalign'
+include { FILTERCLUSTERCONSENSUS } from '../subworkflows/local/filterclusterconsensus'
 
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-validation'
@@ -36,6 +37,16 @@ workflow HIFIAMPLICONANALYSIS {
     ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.nanostats_report.map {it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.bam_qc.map {it[1]})
     ch_versions = ch_versions.mix(QCALIGN.out.versions)
+    
+
+    //
+    // SUBWORKFLOW: Filter for aligned reads with both primers sequences present, then cluster based on sequence similarity, then identify a single consensus sequence for each cluster 
+    //
+    FILTERCLUSTERCONSENSUS ( ch_samplesheet,
+                             QCALIGN.out.aligned_fasta
+                           )
+
+    ch_versions = ch_versions.mix(FILTERCLUSTERCONSENSUS.out.versions)
     
     //
     // Collate and save software versions
