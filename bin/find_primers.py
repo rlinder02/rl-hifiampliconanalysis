@@ -30,6 +30,7 @@ def parse_args():
 def primer_filter(fasta_chunk, primer1, primer2, mismatches, file_name):
     """Filter out reads without both primers (allowing at most -m mismatches) using pairwise local alignments"""
     with open(file_name, 'w') as outfile:
+        print("got here")
         primer1_seq = Seq(primer1)
         primer2_seq = Seq(primer2)
         primer1_score_threshold = len(primer1_seq) - 2*mismatches
