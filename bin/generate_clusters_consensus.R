@@ -60,7 +60,7 @@ cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
 })
 
 counter <- 0
-align_seqs <- unlist(lapply(cluster_list, function(clust) {
+align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   counter <<- counter + 1
   print(counter)
   flush.console()
@@ -77,8 +77,7 @@ align_seqs <- unlist(lapply(cluster_list, function(clust) {
   find_consensus <- ConsensusSequence(aligned_seqs)
   #print(find_consensus)
   find_consensus
-}))
+})))
 #print(str(align_seqs))
 print(align_seqs)
-print(unlist(align_seqs))
 writeXStringSet(align_seqs, file = paste0(output_name, "_consensus.fasta"))
