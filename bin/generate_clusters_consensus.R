@@ -79,7 +79,8 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
       attr(x, "height") <- 0 
       attr(x, "label") <- names(unique_seqs)[x] 
       attr(x, "members") <- 1L 
-      attr(x, "leaf") <- TRUE x 
+      attr(x, "leaf") <- TRUE 
+      x 
     })
     attr(gT, "height") <- 0.5
     attr(gT, "members") <- length(dna)
