@@ -65,7 +65,7 @@ align_seqs <- unlist(lapply(cluster_list, function(clust) {
   print(counter)
   flush.console()
   cluster_seqs <- dna[clust]
-  unique_seqs <- unique(cluster_seqs)a
+  unique_seqs <- unique(cluster_seqs)
   index <- match(cluster_seqs, unique_seqs)
   if(length(unique_seqs) == 1) {
     unique_seqs[2] <- unique_seqs[1]
