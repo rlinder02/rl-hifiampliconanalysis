@@ -18,6 +18,9 @@ workflow FILTERCLUSTERCONSENSUS {
     FINDPRIMERS ( ch_fasta_primer1_primer2 )
     ch_versions = ch_versions.mix(FINDPRIMERS.out.versions.first())
 
+    CLUSTERCONSENSUS ( FINDPRIMERS.out.filtered_fasta )
+    ch_versions = ch_versions.mix(CLUSTERCONSENSUS.out.versions.first())
+
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
     versions = ch_versions                       // channel: [ versions.yml ]
