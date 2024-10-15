@@ -20,7 +20,7 @@ if (length(args) < 2) {
 }
 
 fasta <-  args[1]
-threads <- args[2]
+threads <- as.numeric(args[2])
 
 # ============================================================================
 # Load packages and sourced files
@@ -65,7 +65,7 @@ align_seqs <- unlist(lapply(cluster_list, function(clust) {
   print(counter)
   flush.console()
   cluster_seqs <- dna[clust]
-  unique_seqs <- unique(cluster_seqs)
+  unique_seqs <- unique(cluster_seqs)a
   index <- match(cluster_seqs, unique_seqs)
   if(length(unique_seqs) == 1) {
     unique_seqs[2] <- unique_seqs[1]
