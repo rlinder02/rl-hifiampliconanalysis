@@ -1,4 +1,5 @@
 include { FINDPRIMERS      } from '../../modules/local/findprimers'
+include { CLUSTERCONSENSUS } from '../../modules/local/clusterconsensus'
 
 workflow FILTERCLUSTERCONSENSUS {
 
