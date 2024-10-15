@@ -75,11 +75,11 @@ align_seqs <- unlist(lapply(cluster_list, function(clust) {
   all_seqs <- aligned_seqs[index]
   names(all_seqs) <- names(cluster_seqs)
   find_consensus <- ConsensusSequence(aligned_seqs)
-  print(find_consensus)
+  #print(find_consensus)
   find_consensus
 }))
 print(str(align_seqs))
 print(align_seqs)
 align_seqs_all <- do.call('rbind', align_seqs)
 print(align_seqs_all)
-writeXStringSet(align_seqs_all, file = paste0(output_name, "_consensus.fasta"))
+writeXStringSet(align_seqs, file = paste0(output_name, "_consensus.fasta"))
