@@ -52,13 +52,15 @@ set.seed(123)
 # cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
 c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
 w <- which(c1 < 0 & !duplicated(c1))
+c1$reads <- rownames(c1)
+rownames(c1) <- 1:nrow(c1)
 print(c1)
 print(w)
 selected <- c1[w,]
 print(c1[w,])
-b <- match(c1$cluster, selected$cluster)
+b <- match(c1$cluster, abs(selected$cluster))
 print(c1$cluster)
-print(selected$cluster)
+print(abs(selected$cluster))
 print(b)
 flush.console()
 
