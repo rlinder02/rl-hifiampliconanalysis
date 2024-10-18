@@ -51,18 +51,8 @@ output_name <- strsplit(output_name, "\\.")[[1]][1]
 set.seed(123)
 # cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
 c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
-w <- which(c1 < 0 & !duplicated(c1))
-c1$reads <- rownames(c1)
-rownames(c1) <- 1:nrow(c1)
-print(c1)
-print(w)
-selected <- c1[w,]
-print(c1[w,])
-b <- match(c1$cluster, abs(selected$cluster))
-print(c1$cluster)
-print(abs(selected$cluster))
-print(b)
-flush.console()
+# w <- which(c1 < 0 & !duplicated(c1))
+# c1$reads <- rownames(c1)
 
 # ============================================================================
 # Iterate through clusters, align each cluster, then find the consensus sequence within each aligned cluster 
@@ -95,15 +85,19 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
     centers <- which(recluster < 0 & !duplicated(recluster))
     reduced_seqs <- unique_seqs[centers]
     # all members of a cluster will be collapsed to having a single representative sequence here
-    index2 <- match(reduced_seqs, unique_seqs)
-    print(unique_seqs)
-    print(reduced_seqs)
+    recluster$reads <- rownames(recluster)
+    rownames(recluster) <- 1:nrow(recluster)
+    print(recluster)
+    print(centers)
+    selected <- recluster[centers,]
+    print(selected)
+    index2 <- match(abs(recluster$cluster), abs(selected$cluster))
     print(index2)
     print(length(reduced_seqs))
     flush.console()
     aligned_seqs <- AlignSeqs(reduced_seqs, verbose=FALSE, processors=threads)
     all_unique_seqs <- aligned_seqs[index2]
-    names(all_unique_seqs) <- names(unique_seqs)
+    names(all_unique_seqs) <- recluster$reads
     all_seqs <- all_unique_seqs[index]
     names(all_seqs) <- names(cluster_seqs)
   } else {
