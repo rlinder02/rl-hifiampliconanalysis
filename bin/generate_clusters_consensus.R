@@ -69,7 +69,7 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   unique_seqs <- unique(cluster_seqs)
   index <- match(cluster_seqs, unique_seqs)
   print(names(cluster_seqs))
-  print(name(unique_seqs))
+  print(names(unique_seqs))
   print(index)
   print(length(unique_seqs))
   flush.console()
