@@ -45,12 +45,16 @@ dna <- readDNAStringSet(fasta)
 output_name <- strsplit(fasta, "/")[[1]]
 output_name <- output_name[[length(output_name)]]
 output_name <- strsplit(output_name, "\\.")[[1]][1]
-
+median_width <- median(widths(dna))
+cutoff <- 1/median_width
+print(median_width)
+print(cutoff)
+flush.console()
 # ============================================================================
 # use clusterize to cluster similar sequences
 set.seed(123)
 # cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
-c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
+c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
 # w <- which(c1 < 0 & !duplicated(c1))
 # c1$reads <- rownames(c1)
 
@@ -66,53 +70,22 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   print(counter)
   flush.console()
   cluster_seqs <- dna[clust]
-  unique_seqs <- unique(cluster_seqs)
-  index <- match(cluster_seqs, unique_seqs)
-  if(length(unique_seqs) == 1) {
-    unique_seqs[2] <- unique_seqs[1]
-    names(unique_seqs[2]) <- names(unique_seqs[1])
-  }
-  if(length(unique_seqs) > 1000) {
-    # recluster a cluster that is too large for quick multiple sequence alignment, using a 5% cutoff to split the cluster and then pick each sub-cluster center for alignment 
-    recluster <- Clusterize(unique_seqs, cutoff=0.05, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
-    # reclustered_lengths <- lapply(unique(recluster$cluster), function(reclust) {
-    #   clust_members <- length(which(recluster$cluster == reclust))
-    #   data.frame(cluster = reclust, members = clust_members)
-    # })
-    # reclustered_lengths_df <- do.call('rbind', reclustered_lengths)
-    # print(reclustered_lengths_df)
-    # flush.console()
-    centers <- which(recluster < 0 & !duplicated(recluster))
-    reduced_seqs <- unique_seqs[centers]
-    # all members of a cluster will be collapsed to having a single representative sequence here
-    recluster$reads <- rownames(recluster)
-    rownames(recluster) <- 1:nrow(recluster)
-    print(recluster)
-    print(centers)
-    selected <- recluster[centers,]
-    print(selected)
-    index2 <- match(abs(recluster$cluster), abs(selected$cluster))
-    print(index2)
-    print(length(reduced_seqs))
-    flush.console()
-    aligned_seqs <- AlignSeqs(reduced_seqs, verbose=FALSE, processors=threads)
-    all_unique_seqs <- aligned_seqs[index2]
-    names(all_unique_seqs) <- recluster$reads
-    all_seqs <- all_unique_seqs[index]
-    names(all_seqs) <- names(cluster_seqs)
-  } else {
+  if(length(cluster_seqs) >= 5) {
+    unique_seqs <- unique(cluster_seqs)
+    index <- match(cluster_seqs, unique_seqs)
+    if(length(unique_seqs) == 1) {
+      unique_seqs[2] <- unique_seqs[1]
+      names(unique_seqs[2]) <- names(unique_seqs[1])
+    }
     aligned_seqs <- AlignSeqs(unique_seqs, verbose=FALSE, processors=threads)
     all_seqs <- aligned_seqs[index]
-    print(aligned_seqs)
     names(all_seqs) <- names(cluster_seqs)
-    print(all_seqs)
+    print("Completed alignment")
     flush.console()
+    find_consensus <- ConsensusSequence(all_seqs)
+    #print(find_consensus)
+    find_consensus
   }
-  print("Completed alignment")
-  flush.console()
-  find_consensus <- ConsensusSequence(all_seqs)
-  #print(find_consensus)
-  find_consensus
 })))
 #print(str(align_seqs))
 print(align_seqs)
