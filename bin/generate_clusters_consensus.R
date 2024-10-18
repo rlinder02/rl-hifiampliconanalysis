@@ -88,6 +88,9 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
     centers <- which(recluster < 0 & !duplicated(recluster))
     reduced_seqs <- unique_seqs[centers]
     index2 <- match(unique_seqs, reduced_seqs)
+    print(unique_seqs)
+    print(reduced_seqs)
+    print(index2)
     print(length(reduced_seqs))
     flush.console()
     aligned_seqs <- AlignSeqs(reduced_seqs, verbose=FALSE, processors=threads)
