@@ -76,18 +76,12 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   }
   # create a chained guide tree to speed up alignment if there are more than 1,000 unique members of a cluster 
   if(length(unique_seqs) > 1000) {
-    # gT <- lapply(order(width(unique_seqs), decreasing=TRUE), function(x) { 
-    #   attr(x, "height") <- 0 
-    #   attr(x, "label") <- names(unique_seqs)[x] 
-    #   attr(x, "members") <- 1L 
-    #   attr(x, "leaf") <- TRUE 
-    #   x 
-    # })
-    # attr(gT, "height") <- 0.5
-    # attr(gT, "members") <- length(dna)
-    # class(gT) <- "dendrogram"
-    # aligned_seqs <- AlignSeqs(unique_seqs, verbose=FALSE, processors=threads, iterations=0, refinements=0, guideTree=gT)
-    aligned_seqs <- msa(unique_seqs, method="ClustalOmega", threads=threads)
+    recluster <- Clusterize(unique_seqs, cutoff=0.05, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
+    centers <- which(recluster < 0 & !duplicated(recluster))
+    reduced_seqs <- unique_seqs[centers]
+    print(length(reduced_seqs))
+    flush.console()
+    aligned_seqs <- AlignSeqs(reduced_seqs, verbose=FALSE, processors=threads)
   } else {
     aligned_seqs <- AlignSeqs(unique_seqs, verbose=FALSE, processors=threads)
   }
