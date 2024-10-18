@@ -54,10 +54,11 @@ c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches =
 w <- which(c1 < 0 & !duplicated(c1))
 print(c1)
 print(w)
-print(c1[w])
-b <- match(c1$cluster, w$cluster)
+selected <- c1[w,]
+print(c1[w,])
+b <- match(c1$cluster, selected$cluster)
 print(c1$cluster)
-print(w$cluster)
+print(selected$cluster)
 print(b)
 flush.console()
 
