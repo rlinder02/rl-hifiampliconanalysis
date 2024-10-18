@@ -78,16 +78,16 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   if(length(unique_seqs) > 1000) {
     # recluster a cluster that is too large for quick multiple sequence alignment, using a 1% cutoff to split the cluster and then pick each sub-cluster center for alignment 
     recluster <- Clusterize(unique_seqs, cutoff=0.05, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
-    reclustered_lengths <- lapply(unique(recluster$cluster), function(reclust) {
-      clust_members <- length(which(recluster$cluster == reclust))
-      data.frame(cluster = reclust, members = clust_members)
-    })
-    reclustered_lengths_df <- do.call('rbind', reclustered_lengths)
-    print(reclustered_lengths_df)
-    flush.console()
+    # reclustered_lengths <- lapply(unique(recluster$cluster), function(reclust) {
+    #   clust_members <- length(which(recluster$cluster == reclust))
+    #   data.frame(cluster = reclust, members = clust_members)
+    # })
+    # reclustered_lengths_df <- do.call('rbind', reclustered_lengths)
+    # print(reclustered_lengths_df)
+    # flush.console()
     centers <- which(recluster < 0 & !duplicated(recluster))
     reduced_seqs <- unique_seqs[centers]
-    index2 <- match(unique_seqs, reduced_seqs)
+    index2 <- match(reduced_seqs, unique_seqs)
     print(unique_seqs)
     print(reduced_seqs)
     print(index2)
@@ -101,7 +101,10 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   } else {
     aligned_seqs <- AlignSeqs(unique_seqs, verbose=FALSE, processors=threads)
     all_seqs <- aligned_seqs[index]
+    print(aligned_seqs)
     names(all_seqs) <- names(cluster_seqs)
+    print(all_seqs)
+    flush.console()
   }
   print("Completed alignment")
   flush.console()
