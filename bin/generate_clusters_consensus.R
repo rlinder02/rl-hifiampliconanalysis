@@ -50,7 +50,7 @@ output_name <- strsplit(output_name, "\\.")[[1]][1]
 # use clusterize to cluster similar sequences
 set.seed(123)
 # cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
-c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
+c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
 # w <- which(c1 < 0 & !duplicated(c1))
 # c1$reads <- rownames(c1)
 
@@ -73,7 +73,7 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
     names(unique_seqs[2]) <- names(unique_seqs[1])
   }
   if(length(unique_seqs) > 1000) {
-    # recluster a cluster that is too large for quick multiple sequence alignment, using a 1% cutoff to split the cluster and then pick each sub-cluster center for alignment 
+    # recluster a cluster that is too large for quick multiple sequence alignment, using a 5% cutoff to split the cluster and then pick each sub-cluster center for alignment 
     recluster <- Clusterize(unique_seqs, cutoff=0.05, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
     # reclustered_lengths <- lapply(unique(recluster$cluster), function(reclust) {
     #   clust_members <- length(which(recluster$cluster == reclust))
