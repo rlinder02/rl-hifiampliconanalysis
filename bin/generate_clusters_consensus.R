@@ -68,6 +68,7 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   cluster_seqs <- dna[clust]
   unique_seqs <- unique(cluster_seqs)
   index <- match(cluster_seqs, unique_seqs)
+  print(index)
   print(length(unique_seqs))
   flush.console()
   if(length(unique_seqs) == 1) {
@@ -76,7 +77,7 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   }
   if(length(unique_seqs) > 1000) {
     # recluster a cluster that is too large for quick multiple sequence alignment, using a 1% cutoff to split the cluster and then pick each sub-cluster center for alignment 
-    recluster <- Clusterize(unique_seqs, cutoff=0.01, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
+    recluster <- Clusterize(unique_seqs, cutoff=0.05, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
     reclustered_lengths <- lapply(unique(recluster$cluster), function(reclust) {
       clust_members <- length(which(recluster$cluster == reclust))
       data.frame(cluster = reclust, members = clust_members)
@@ -86,17 +87,22 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
     flush.console()
     centers <- which(recluster < 0 & !duplicated(recluster))
     reduced_seqs <- unique_seqs[centers]
+    index2 <- match(unique_seqs, reduced_seqs)
     print(length(reduced_seqs))
     flush.console()
     aligned_seqs <- AlignSeqs(reduced_seqs, verbose=FALSE, processors=threads)
+    all_unique_seqs <- aligned_seqs[index2]
+    names(all_unique_seqs) <- names(unique_seqs)
+    all_seqs <- all_unique_seqs[index]
+    names(all_seqs) <- names(cluster_seqs)
   } else {
     aligned_seqs <- AlignSeqs(unique_seqs, verbose=FALSE, processors=threads)
+    all_seqs <- aligned_seqs[index]
+    names(all_seqs) <- names(cluster_seqs)
   }
   print("Completed alignment")
   flush.console()
-  all_seqs <- aligned_seqs[index]
-  names(all_seqs) <- names(cluster_seqs)
-  find_consensus <- ConsensusSequence(aligned_seqs)
+  find_consensus <- ConsensusSequence(all_seqs)
   #print(find_consensus)
   find_consensus
 })))
