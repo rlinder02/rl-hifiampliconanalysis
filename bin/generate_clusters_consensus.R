@@ -74,9 +74,16 @@ align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
     unique_seqs[2] <- unique_seqs[1]
     names(unique_seqs[2]) <- names(unique_seqs[1])
   }
-  # create a chained guide tree to speed up alignment if there are more than 1,000 unique members of a cluster 
   if(length(unique_seqs) > 1000) {
-    recluster <- Clusterize(unique_seqs, cutoff=0.05, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
+    # recluster a cluster that is too large for quick multiple sequence alignment, using a 1% cutoff to split the cluster and then pick each sub-cluster center for alignment 
+    recluster <- Clusterize(unique_seqs, cutoff=0.01, processors=threads, penalizeGapLetterMatches = TRUE, invertCenters = TRUE)
+    reclustered_lengths <- lapply(unique(recluster$cluster), function(reclust) {
+      clust_members <- length(which(recluster$cluster == reclust))
+      data.frame(cluster = reclust, members = clust_members)
+    })
+    reclustered_lengths_df <- do.call('rbind', reclustered_lengths)
+    print(reclustered_lengths_df)
+    flush.console()
     centers <- which(recluster < 0 & !duplicated(recluster))
     reduced_seqs <- unique_seqs[centers]
     print(length(reduced_seqs))
