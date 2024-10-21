@@ -44,16 +44,12 @@ dna <- readDNAStringSet(fasta)
 output_name <- strsplit(fasta, "/")[[1]]
 output_name <- output_name[[length(output_name)]]
 output_name <- strsplit(output_name, "\\.")[[1]][1]
-median_width <- median(widths(dna))
-cutoff <- 1/median_width
 
 # ============================================================================
 # use clusterize to cluster similar sequences
 set.seed(123)
 # cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
-c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
-# w <- which(c1 < 0 & !duplicated(c1))
-# c1$reads <- rownames(c1)
+c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster
 
 # ============================================================================
 # Iterate through clusters, write out each cluster to a fasta file if there are at least 5 reads in that cluster
