@@ -1,4 +1,4 @@
-process CLUSTERCONSENSUS {
+process CLUSTER {
     tag "$meta.id"
     label 'process_medium'
 
@@ -21,7 +21,7 @@ process CLUSTERCONSENSUS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    generate_clusters_consensus.R $fasta $task.cpus
+    generate_clusters.R $fasta $task.cpus
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

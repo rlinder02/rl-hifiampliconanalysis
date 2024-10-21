@@ -1,5 +1,5 @@
 include { FINDPRIMERS      } from '../../modules/local/findprimers'
-include { CLUSTERCONSENSUS } from '../../modules/local/clusterconsensus'
+include { CLUSTER          } from '../../modules/local/cluster'
 
 workflow FILTERCLUSTERCONSENSUS {
 
@@ -19,8 +19,8 @@ workflow FILTERCLUSTERCONSENSUS {
     FINDPRIMERS ( ch_fasta_primer1_primer2 )
     ch_versions = ch_versions.mix(FINDPRIMERS.out.versions.first())
 
-    CLUSTERCONSENSUS ( FINDPRIMERS.out.filtered_fasta )
-    ch_versions = ch_versions.mix(CLUSTERCONSENSUS.out.versions.first())
+    CLUSTER ( FINDPRIMERS.out.filtered_fasta )
+    ch_versions = ch_versions.mix(CLUSTER.out.versions.first())
 
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]

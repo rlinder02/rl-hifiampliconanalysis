@@ -25,7 +25,6 @@ threads <- as.numeric(args[2])
 # ============================================================================
 # Load packages and sourced files
 library(DECIPHER)
-library(msa)
 
 
 # ============================================================================
@@ -47,46 +46,30 @@ output_name <- output_name[[length(output_name)]]
 output_name <- strsplit(output_name, "\\.")[[1]][1]
 median_width <- median(widths(dna))
 cutoff <- 1/median_width
-print(median_width)
-print(cutoff)
-flush.console()
+
 # ============================================================================
 # use clusterize to cluster similar sequences
 set.seed(123)
 # cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
-c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
+c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster as below
 # w <- which(c1 < 0 & !duplicated(c1))
 # c1$reads <- rownames(c1)
 
 # ============================================================================
-# Iterate through clusters, align each cluster, then find the consensus sequence within each aligned cluster 
+# Iterate through clusters, write out each cluster to a fasta file if there are at least 5 reads in that cluster
 cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
   rownames(c1)[c1$cluster==clust]
 })
 
 counter <- 0
-align_seqs <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
+denote_clusters <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) {
   counter <<- counter + 1
   print(counter)
   flush.console()
   cluster_seqs <- dna[clust]
   if(length(cluster_seqs) >= 5) {
-    unique_seqs <- unique(cluster_seqs)
-    index <- match(cluster_seqs, unique_seqs)
-    if(length(unique_seqs) == 1) {
-      unique_seqs[2] <- unique_seqs[1]
-      names(unique_seqs[2]) <- names(unique_seqs[1])
-    }
-    aligned_seqs <- AlignSeqs(unique_seqs, verbose=FALSE, processors=threads)
-    all_seqs <- aligned_seqs[index]
-    names(all_seqs) <- names(cluster_seqs)
-    print("Completed alignment")
-    flush.console()
-    find_consensus <- ConsensusSequence(all_seqs)
-    #print(find_consensus)
-    find_consensus
+    names(cluster_seqs) <- paste0(names(cluster_seqs), "_cluster", counter)
+    cluster_seqs
   }
 })))
-#print(str(align_seqs))
-print(align_seqs)
-writeXStringSet(align_seqs, file = paste0(output_name, "_consensus.fasta"))
+writeXStringSet(denote_clusters, file = paste0(output_name, "_consensus.fasta"))
