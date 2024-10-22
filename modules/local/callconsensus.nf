@@ -39,7 +39,20 @@ process CALLCONSENSUS {
     bcftools \\
         call \\
         -mv \\
+        -Ou \\
+        --threads $task.cpus \\
+    | \\
+    bcftools \\
+        norm \\
+        -f $ref \\
+        --threads $task.cpus \\
+        -Ou \\
+    | \\
+    bcftools \\
+        filter \\
+        --IndelGap 5 \\
         -Oz \\
+        --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
