@@ -2,6 +2,7 @@ include { FINDPRIMERS      } from '../../modules/local/findprimers'
 include { CLUSTER          } from '../../modules/local/cluster'
 include { ALIGNCLUSTERS    } from '../../modules/local/alignclusters'
 include { SPLITBAM         } from '../../modules/local/splitbam'
+include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 
 workflow FILTERCLUSTERCONSENSUS {
 
@@ -33,8 +34,10 @@ workflow FILTERCLUSTERCONSENSUS {
     SPLITBAM ( ALIGNCLUSTERS.out.bam )
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
-    ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0)
-    ch_bams_ref.transpose().view()
+    ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
+    
+    CALLCONSENSUS ( ch_bams_ref )
+    ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
