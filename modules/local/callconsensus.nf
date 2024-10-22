@@ -1,6 +1,7 @@
 process CALLCONSENSUS {
     tag "$meta.id"
     label 'process_medium'
+    debug true
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -21,6 +22,10 @@ process CALLCONSENSUS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    file_name=\$(basename $bam .bam)
+    cluster_id =\${file_name##*_}
+    echo \$cluster_id
+
     bcftools \\
         mpileup \\
         $args \\
@@ -40,7 +45,7 @@ process CALLCONSENSUS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        callconsensus: \$(samtools --version |& sed '1!d ; s/samtools //')
+        bcftools: \$(bcftools --version | head -1 | sed 's/bcftools //')
     END_VERSIONS
     """
 
@@ -52,7 +57,7 @@ process CALLCONSENSUS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        callconsensus: \$(samtools --version |& sed '1!d ; s/samtools //')
+        bcftools: \$(bcftools --version | head -1 | sed 's/bcftools //')
     END_VERSIONS
     """
 }
