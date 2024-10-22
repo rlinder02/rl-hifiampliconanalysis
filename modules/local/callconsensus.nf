@@ -23,7 +23,8 @@ process CALLCONSENSUS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     file_name=\$(basename $bam .bam)
-    cluster_id =\${file_name##*_}
+    echo \$file_name
+    cluster_id=\${file_name##*_}
     echo \$cluster_id
 
     bcftools \\
