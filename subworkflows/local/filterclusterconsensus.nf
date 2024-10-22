@@ -33,6 +33,9 @@ workflow FILTERCLUSTERCONSENSUS {
     SPLITBAM ( ALIGNCLUSTERS.out.bam )
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
+    ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0)
+    ch_bams_ref.view()
+
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
     versions = ch_versions                       // channel: [ versions.yml ]
