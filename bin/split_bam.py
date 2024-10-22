@@ -35,6 +35,7 @@ def extract_reads(cluster_dict, bam, file_name):
             if read.query_name in cluster_dict.get(cluster_id):
                 with pysam.AlignmentFile(f"{file_name}_{cluster_id}.bam", "wb", template=bamfile) as bam_file:
                     bam_file.write(read)
+                    
 def main():
     inputs = parse_args()
     bam =  inputs.bam_file

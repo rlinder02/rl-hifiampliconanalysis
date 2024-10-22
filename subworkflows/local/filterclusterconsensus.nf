@@ -1,6 +1,7 @@
 include { FINDPRIMERS      } from '../../modules/local/findprimers'
 include { CLUSTER          } from '../../modules/local/cluster'
 include { ALIGNCLUSTERS    } from '../../modules/local/alignclusters'
+include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 
@@ -31,7 +32,10 @@ workflow FILTERCLUSTERCONSENSUS {
     ALIGNCLUSTERS ( ch_clusters_ref )
     ch_versions = ch_versions.mix(ALIGNCLUSTERS.out.versions.first())
 
-    SPLITBAM ( ALIGNCLUSTERS.out.bam )
+    TAGBAM ( ALIGNCLUSTERS.out.bam )
+    ch_versions = ch_versions.mix(TAGBAM.out.versions.first())
+
+    SPLITBAM ( TAGBAM.out.modified_bam )
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
     ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
