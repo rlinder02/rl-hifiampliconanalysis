@@ -38,6 +38,7 @@ def extract_reads(cluster_dict, bam, file_name):
 def main():
     inputs = parse_args()
     bam =  inputs.bam_file
+    pysam.index(bam)
     file_name = bam.split('/')[-1].split('.')[0]
     cluster_dict = find_reads(bam)
     extract_reads(cluster_dict, bam, file_name)
