@@ -52,6 +52,7 @@ process CALLCONSENSUS {
     bcftools \\
         filter \\
         --IndelGap 5 \\
+        -i 'QUAL>=20 & INFO/DP>=5' \\
         -Oz \\
         --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
@@ -73,11 +74,7 @@ process CALLCONSENSUS {
         consensus \\
         -o ${prefix}_\${cluster_id}.fasta
         -f $ref \\
-        --mark-del '-' \\
-        --mark-ins '+' \\
-        --mark-snv 'lc' \\
         -H I \\
-        -i 'QUAL>=20 & INFO/DP>=5' \\
         ${prefix}_\${cluster_id}_modified.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
