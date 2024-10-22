@@ -23,9 +23,7 @@ process CALLCONSENSUS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     file_name=\$(basename $bam .bam)
-    echo \$file_name
     cluster_id=\${file_name##*_}
-    echo \$cluster_id
 
     bcftools \\
         mpileup \\
@@ -42,7 +40,7 @@ process CALLCONSENSUS {
         call \\
         -mv \\
         -Oz \\
-        -o ${prefix}.vcf.gz
+        -o ${prefix}_\${cluster_id}.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
