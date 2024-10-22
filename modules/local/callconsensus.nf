@@ -12,8 +12,9 @@ process CALLCONSENSUS {
     tuple val(meta), path(bam), path(ref)
 
     output:
-    tuple val(meta), path("*.vcf.gz"), emit: vcf
-    path "versions.yml"              , emit: versions
+    tuple val(meta), path("*modified.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.fasta")         , emit: con_fasta
+    path "versions.yml"                      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -54,6 +55,30 @@ process CALLCONSENSUS {
         -Oz \\
         --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
+    bcftools +setGT \\
+        ${prefix}_\${cluster_id}.vcf.gz -- \\
+        -t q \\
+        -i 'AD[:1]/DP>=0.8' \\
+        -n 'c:1/1' \\
+    | \\
+    bcftools +setGT \\
+        -o ${prefix}_\${cluster_id}_modified.vcf.gz \\
+        -- \\
+        -t q \\
+        -i 'AD[:1]/DP<0.8' \\
+        -n 'c:0/1'
+    tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
+
+    bcftools \\
+        consensus \\
+        -o ${prefix}_\${cluster_id}.fasta
+        -f $ref \\
+        --mark-del '-' \\
+        --mark-ins '+' \\
+        --mark-snv 'lc' \\
+        -H I \\
+        -i 'QUAL>=20 & INFO/DP>=5' \\
+        ${prefix}_\${cluster_id}_modified.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
