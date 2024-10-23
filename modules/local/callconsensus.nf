@@ -72,9 +72,11 @@ process CALLCONSENSUS {
         -i 'AD[:1]/DP<0.8' \\
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
+    
+    echo "COMPLETED TABIX" 
 
     variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | wc -l)
-    echo "AND HERE"
+    echo "BUT NOT VARIANT NUM"
     echo \$variant_num
     echo "NOT HERE"
 
