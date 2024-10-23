@@ -12,7 +12,7 @@ process CALLCONSENSUS {
     tuple val(meta), path(bam), path(ref)
 
     output:
-    tuple val(meta), path("*modified.vcf.gz"), emit: vcf
+    tuple val(meta), path("*modified.vcf.gz"), emit: vcf       , optional: true
     tuple val(meta), path("*.fasta")         , emit: con_fasta , optional: true
     path "versions.yml"                      , emit: versions
 
@@ -82,7 +82,9 @@ process CALLCONSENSUS {
             -f $ref \\
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
-    else
+    fi
+    if [ \$variant_num -lt 1 ]
+    then
         echo "NOTHING HERE!"
         rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
