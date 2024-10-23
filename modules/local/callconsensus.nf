@@ -57,8 +57,7 @@ process CALLCONSENSUS {
         --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
 
-    variant_num1=\$(zcat ${prefix}_\${cluster_id}.vcf.gz | grep -v '#' | wc -l)
-    echo \$variant_num1
+    echo "MADE IT!"
 
     bcftools +setGT \\
         ${prefix}_\${cluster_id}.vcf.gz -- \\
@@ -75,7 +74,9 @@ process CALLCONSENSUS {
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
 
     variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | wc -l)
+    echo "AND HERE"
     echo \$variant_num
+    echo "NOT HERE"
 
     if [ \$variant_num -gt 0 ]
     then
