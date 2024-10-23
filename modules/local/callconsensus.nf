@@ -73,7 +73,7 @@ process CALLCONSENSUS {
     variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | wc -l)
     echo \$variant_num
 
-    if [[ \$variant_num -gt 0 ]]
+    if [ \$variant_num -gt 0 ]
     then
         echo "SOMETHING HERE!"
         bcftools \\
@@ -84,7 +84,7 @@ process CALLCONSENSUS {
             ${prefix}_\${cluster_id}_modified.vcf.gz
     else
         echo "NOTHING HERE!"
-        rm ${prefix}_\${cluster_id}_modified.vcf.gz
+        rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
 
     cat <<-END_VERSIONS > versions.yml
