@@ -56,6 +56,10 @@ process CALLCONSENSUS {
         -Oz \\
         --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
+
+    variant_num1=\$(zcat ${prefix}_\${cluster_id}.vcf.gz | grep -v '#' | wc -l)
+    echo \$variant_num1
+
     bcftools +setGT \\
         ${prefix}_\${cluster_id}.vcf.gz -- \\
         -t q \\
