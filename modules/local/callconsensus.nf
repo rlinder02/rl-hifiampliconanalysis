@@ -12,8 +12,8 @@ process CALLCONSENSUS {
     tuple val(meta), path(bam), path(ref)
 
     output:
-    tuple val(meta), path("*modified.vcf.gz"), emit: vcf, optional: true
-    tuple val(meta), path("*.fasta")         , emit: con_fasta, optional: true
+    tuple val(meta), path("*modified.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.fasta")         , emit: con_fasta , optional: true
     path "versions.yml"                      , emit: versions
 
     when:
