@@ -71,6 +71,7 @@ process CALLCONSENSUS {
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
 
     variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | wc -l)
+    echo \$variant_num
 
     if [[ \$variant_num -gt 0 ]]; then
         bcftools \\
@@ -80,7 +81,8 @@ process CALLCONSENSUS {
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
     else
-        rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
+        echo "NOTHING HERE"
+        rm ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
 
     cat <<-END_VERSIONS > versions.yml
