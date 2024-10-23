@@ -74,6 +74,7 @@ process CALLCONSENSUS {
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
     echo "COMPLETED TABIX" 
+    echo \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#')
     
     variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#')
     
