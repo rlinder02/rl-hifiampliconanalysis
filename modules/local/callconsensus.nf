@@ -73,7 +73,9 @@ process CALLCONSENSUS {
     variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | wc -l)
     echo \$variant_num
 
-    if [[ \$variant_num -gt 0 ]]; then
+    if [[ \$variant_num -gt 0 ]]
+    then
+        echo "SOMETHING HERE!"
         bcftools \\
             consensus \\
             -o ${prefix}_\${cluster_id}.fasta \\
@@ -81,7 +83,7 @@ process CALLCONSENSUS {
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
     else
-        echo "NOTHING HERE"
+        echo "NOTHING HERE!"
         rm ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
 
