@@ -74,8 +74,8 @@ process CALLCONSENSUS {
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
     echo "COMPLETED TABIX" 
-    echo \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#')
-    variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | wc -l)
+    
+    variant_num=\$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#')
     
     echo "BUT NOT VARIANT NUM"
     echo \$variant_num
@@ -90,9 +90,7 @@ process CALLCONSENSUS {
             -f $ref \\
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
-    fi
-    if [ \$variant_num -lt 1 ]
-    then
+    else 
         echo "NOTHING HERE!"
         rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
