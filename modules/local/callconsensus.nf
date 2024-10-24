@@ -1,7 +1,7 @@
 process CALLCONSENSUS {
     tag "$meta.id"
     label 'process_medium'
-    
+
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/bcftools_minimap2_samtools:c2489975f9638f9b':
@@ -11,8 +11,8 @@ process CALLCONSENSUS {
     tuple val(meta), path(bam), path(ref)
 
     output:
-    tuple val(meta), path("*modified.vcf.gz"), emit: vcf       , optional: true
-    tuple val(meta), path("*.fasta")         , emit: con_fasta , optional: true
+    tuple val(meta.id), path("*modified.vcf.gz"), emit: vcf       , optional: true
+    tuple val(meta.id), path("*.fasta")         , emit: con_fasta , optional: true
     path "versions.yml"                      , emit: versions
 
     when:
