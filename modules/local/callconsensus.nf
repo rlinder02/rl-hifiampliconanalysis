@@ -72,7 +72,7 @@ process CALLCONSENSUS {
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
-    echo \$(zcat $ref | grep -v '>' | wc -m)
+    echo \$(cat $ref | grep -v '>' | wc -m)
     echo \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0')
 
     if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 ]
