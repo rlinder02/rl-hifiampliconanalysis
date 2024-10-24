@@ -49,7 +49,8 @@ workflow FILTERCLUSTERCONSENSUS {
     vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first()
                     return tuple(key, file) }.groupTuple()
-    vcfs.view()
+    ch_fastas_vcfs = fastas.combine(vcfs, by:0)
+    ch_fastas_vcfs.view()
     //CALLCONSENSUS.out.vcf.toList().view()
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
