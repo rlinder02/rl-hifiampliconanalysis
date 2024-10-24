@@ -43,7 +43,7 @@ workflow FILTERCLUSTERCONSENSUS {
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
-    con_seqs = CALLCONSENSUS.out.con_fasta
+    con_seqs = CALLCONSENSUS.out.con_fasta[0]
     con_seqs.view()
     //CALLCONSENSUS.out.vcf.toList().view()
     emit:
