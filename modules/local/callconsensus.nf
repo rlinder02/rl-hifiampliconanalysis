@@ -1,6 +1,7 @@
 process CALLCONSENSUS {
     tag "$meta.id"
     label 'process_medium'
+    debug true
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -70,6 +71,8 @@ process CALLCONSENSUS {
         -i 'AD[:1]/DP<0.8' \\
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
+    
+    echo "Made it here!"
 
     if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 -o \$(cat $ref | grep -v '>' | tr -d "\n" | wc -m) -eq \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0') ]
     then
@@ -85,7 +88,7 @@ process CALLCONSENSUS {
     else 
         rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
-
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bcftools: \$(bcftools --version | head -1 | sed 's/bcftools //')
