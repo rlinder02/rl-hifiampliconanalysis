@@ -38,7 +38,7 @@ process CALLCONSENSUS {
     | \\
     bcftools \\
         call \\
-        -mv \\
+        -m \\
         -Ou \\
         --threads $task.cpus \\
     | \\
@@ -53,6 +53,7 @@ process CALLCONSENSUS {
         --IndelGap 5 \\
         -i 'QUAL >= 20 & INFO/DP >= 5' \\
         -Oz \\
+        -s FAIL \\
         --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
 
@@ -69,11 +70,16 @@ process CALLCONSENSUS {
         -i 'AD[:1]/DP<0.8' \\
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
-    
-    if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#') -gt 0 ]
+
+    # if there are any variants that passed the filter or if the length of the query sequence is different from the reference sequence, then run the consensus caller
+
+    if [[ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 || \$(cat $ref | grep -v ">" | tr -d "\n" | wc -m) -eq \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0') ]]
     then
         bcftools \\
             consensus \\
+            -a '*' \\
+            --mark-del '-' \\
+            -i 'QUAL >= 20 & INFO/DP >= 5' \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             -H I \\
