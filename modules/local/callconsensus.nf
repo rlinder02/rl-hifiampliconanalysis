@@ -57,8 +57,6 @@ process CALLCONSENSUS {
         --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}.vcf.gz
 
-    echo "MADE IT!"
-
     bcftools +setGT \\
         ${prefix}_\${cluster_id}.vcf.gz -- \\
         -t q \\
@@ -73,14 +71,10 @@ process CALLCONSENSUS {
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
-    echo "COMPLETED TABIX" 
     echo \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#')
-    
-    echo "NOT HERE"
 
     if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#') -gt 0 ]
     then
-        echo "SOMETHING HERE!"
         bcftools \\
             consensus \\
             -o ${prefix}_\${cluster_id}.fasta \\
@@ -88,7 +82,6 @@ process CALLCONSENSUS {
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
     else 
-        echo "NOTHING HERE!"
         rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
     fi
 
