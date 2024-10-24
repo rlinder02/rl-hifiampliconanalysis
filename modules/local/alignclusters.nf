@@ -27,7 +27,7 @@ process ALIGNCLUSTERS {
         -t $task.cpus \\
         -Y \\
         -a \\
-        -x splice:hq \\
+        -x map-hifi \\
         $ref \\
         $fasta \\
     | \\
