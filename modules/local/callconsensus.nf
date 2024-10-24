@@ -1,8 +1,7 @@
 process CALLCONSENSUS {
     tag "$meta.id"
     label 'process_medium'
-    debug true
-
+    
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/bcftools_minimap2_samtools:c2489975f9638f9b':
@@ -71,8 +70,6 @@ process CALLCONSENSUS {
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
-    echo \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#')
-
     if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc '#') -gt 0 ]
     then
         bcftools \\
