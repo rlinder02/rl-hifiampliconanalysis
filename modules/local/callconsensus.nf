@@ -74,7 +74,7 @@ process CALLCONSENSUS {
     
     echo "Made it here!"
 
-    if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 ]
+    if [ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 -o \$(cat $ref | grep -v '>' | tr -d "\n" | wc -m) -eq \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -vc 'DP=0') ]
     then
         bcftools \\
             consensus \\
