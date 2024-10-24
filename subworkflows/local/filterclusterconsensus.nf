@@ -43,10 +43,13 @@ workflow FILTERCLUSTERCONSENSUS {
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
-    tuples = CALLCONSENSUS.out.con_fasta.map { file -> 
+    fastas = CALLCONSENSUS.out.con_fasta.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first()
                     return tuple(key, file) }.groupTuple()
-    tuples.view()
+    vcfs = CALLCONSENSUS.out.vcf.map { file -> 
+                    def key = file.name.toString().split('/').last().split('_clu').first()
+                    return tuple(key, file) }.groupTuple()
+    vcfs.view()
     //CALLCONSENSUS.out.vcf.toList().view()
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
