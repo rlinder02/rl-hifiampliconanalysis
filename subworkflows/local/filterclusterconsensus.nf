@@ -1,3 +1,4 @@
+include { BOUNDARIES       } from '../../modules/local/boundaries'
 include { FINDPRIMERS      } from '../../modules/local/findprimers'
 include { CLUSTER          } from '../../modules/local/cluster'
 include { ALIGNCLUSTERS    } from '../../modules/local/alignclusters'
@@ -21,6 +22,12 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_fasta_primer1 = ch_aligned_fasta.combine(ch_primer1, by:0)
     ch_fasta_primer1_primer2 = ch_fasta_primer1.combine(ch_primer2, by:0)
     
+    ch_ref_primer1 = ch_ref.combine(ch_primer1, by:0)
+    ch_ref_primers = ch_ref_primer1.combine(ch_primer2, by:0)
+
+    BOUNDARIES ( ch_ref_primers )
+    ch_versions = ch_versions.mix(BOUNDARIES.out.versions.first())
+
     FINDPRIMERS ( ch_fasta_primer1_primer2 )
     ch_versions = ch_versions.mix(FINDPRIMERS.out.versions.first())
 
