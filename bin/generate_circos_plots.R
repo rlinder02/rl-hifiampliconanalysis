@@ -46,14 +46,13 @@ setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalD
 
 ref_fasta <- "hSmarca5_cDNA.fasta"
 ref_bed <- "hSmarca5_cDNA.bed"
+ref_bounds <- "hSmarca5_cDNA.txt"
 vcf1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7_modified.vcf.gz"
 fasta1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7.fasta"
 vcf2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39_modified.vcf.gz"
 fasta2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39.fasta"
 
-
-
-vcf_1[]
+ref_bounds_dt <- fread(ref_bounds)
 
 ref_bed_dt <- fread(ref_bed)
 coord_shift <- ref_bed_dt$V2[1]
@@ -68,26 +67,18 @@ ref_bed_dt[, end := V5]
 ref_bed_dt[, feature := gsub("Exon_", "", V1)]
 columns <- c("feature", "start", "end")
 ref_bed_dt <- ref_bed_dt[, ..columns]
-# cap the 3'UTR at 4200 bases 
-ref_bed_dt$end[24] <- 4100
 
 vcf_1 <- fread(vcf1)
 # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
 vcf_1[, POS := POS - 1 ]
-
-###! will need to add in a step to filter out sites that have no coverage from further analysis 
-
 vcf_1[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
 vcf_1[, c("start", "end") := .(min(POS), max(POS)), by = feature]
 struct_columns <- c("feature", "start", "end")
 vcf_1_structure <- unique(vcf_1[, ..struct_columns])
 
-
-
-dna <- readDNAStringSet(fasta)
-output_name <- strsplit(fasta, "/")[[1]]
-output_name <- output_name[[length(output_name)]]
-output_name <- strsplit(output_name, "\\.")[[1]][1]
+# limit plotting to primer bounds 
+ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
+ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
 
 # ============================================================================
 # Preprocess data

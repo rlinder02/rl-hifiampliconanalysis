@@ -30,8 +30,8 @@ process CALLCONSENSUS {
         mpileup \\
         $args \\
         --threads $task.cpus \\
-        --max-depth 100000 \\
-        -L 100000 \\
+        --max-depth 1000000 \\
+        -L 1000000 \\
         -X pacbio-ccs \\
         -Ou \\
         -f $ref \\

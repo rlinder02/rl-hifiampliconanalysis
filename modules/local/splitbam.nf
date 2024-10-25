@@ -12,6 +12,7 @@ process SPLITBAM {
 
     output:
     tuple val(meta), path("*.bam"), emit: bams
+    tuple val(meta), path("*.txt"), emit: txt
     path "versions.yml"           , emit: versions
 
     when:
@@ -27,6 +28,12 @@ process SPLITBAM {
         -@ $task.cpus \\
         -d CL \\
         $bam
+    samtools \\
+        view \\
+        $args \\
+        $bam \\
+    | \\
+    cut -f1 | sort | uniq | wc -l > ${prefix}_total_aligned_reads.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
