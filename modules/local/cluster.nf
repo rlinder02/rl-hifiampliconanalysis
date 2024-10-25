@@ -4,8 +4,8 @@ process CLUSTER {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://docker.io/rlinder02/deciphergvizmsa:v0.0.1':
-        'docker.io/rlinder02/deciphergvizmsa:v0.0.1' }"
+        'https://docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1':
+        'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
 
     input:
     tuple val(meta), path(fasta)

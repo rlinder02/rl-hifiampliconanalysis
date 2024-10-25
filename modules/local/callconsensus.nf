@@ -14,6 +14,7 @@ process CALLCONSENSUS {
     output:
     path("*modified.vcf.gz")                    , emit: vcf       , optional: true
     path("*.fasta")                             , emit: con_fasta , optional: true
+    path("*.txt")                               , emit: txt       , optional: true
     path "versions.yml"                         , emit: versions
 
     when:
@@ -25,6 +26,12 @@ process CALLCONSENSUS {
     """
     file_name=\$(basename $bam .bam)
     cluster_id=\${file_name##*_}
+
+    samtools \\
+        view \\
+        $bam \\
+    | \\
+    cut -f1 | sort | uniq | wc -l > ${prefix}_\${cluster_id}_aligned_reads.txt
 
     bcftools \\
         mpileup \\

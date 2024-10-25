@@ -51,6 +51,7 @@ vcf1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7_modified.vcf.gz"
 fasta1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7.fasta"
 vcf2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39_modified.vcf.gz"
 fasta2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39.fasta"
+total_reads <- 1285200
 
 ref_bounds_dt <- fread(ref_bounds)
 
@@ -69,13 +70,29 @@ columns <- c("feature", "start", "end")
 ref_bed_dt <- ref_bed_dt[, ..columns]
 
 vcf_1 <- fread(vcf1)
+names(vcf_1)[10] <- "SAMPLE"
+
 # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
 vcf_1[, POS := POS - 1 ]
 vcf_1[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
 vcf_1[, c("start", "end") := .(min(POS), max(POS)), by = feature]
 struct_columns <- c("feature", "start", "end")
 vcf_1_structure <- unique(vcf_1[, ..struct_columns])
+vcf_1_depth <- gsub(";.*", "", vcf_1$INFO)
+vcf_1_depth <- vcf_1_depth[grep("DP", vcf_1_depth)]
+vcf_1[, total_reads := as.numeric(gsub('DP=', "", vcf_1_depth))]
+vcf_1_depth <- max(as.numeric(gsub('DP=', "", vcf_1_depth)), na.rm = TRUE)
 
+# keep only positions with called mutations 
+vcf_1_muts <- vcf_1[grepl("AC=", INFO) & grepl("PASS", FILTER)]
+vcf_1_muts[, TYPE := ifelse(grepl("INDEL", INFO), "INDEL", "SNV")]
+vcf_1_muts[, symbol := ifelse(grepl("SNV", TYPE), 16, 17)]
+vcf_1_muts[, alt_count :=  as.numeric(gsub(".*,", "", SAMPLE))]
+vcf_1_muts[, alt_frequency := alt_count/total_reads]
+vcf_1_muts[, POS_END := POS +1]
+muts_columns <- c("feature", "POS", "POS_END", "alt_frequency", "symbol")
+vcf_1_muts_dt <- vcf_1_muts[, ..muts_columns]
+           
 # limit plotting to primer bounds 
 ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
 ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
@@ -103,11 +120,19 @@ circos.genomicTrack(vcf_1_structure, stack = TRUE, track.height = 0.05, bg.borde
                       i = getI(...)
                       xlim = CELL_META$xlim
                       ylim = CELL_META$ylim
-                      print(region$start)
-                      print(region$end)
                       flush.console()
-                      circos.rect(region$start, 0, region$end, 1, col = "red")
+                      circos.rect(region$start, 0, region$end, 1, col = "white", border = "black")
+                      circos.genomicPoints(region, value, pch = value$symbol, cex = 0.75, col = "red", ...)
 })
+circos.genomicTrack(vcf_1_muts_dt, stack = TRUE, track.height = 0.05, bg.border = NA,
+                    panel.fun = function(region, value, ...) {
+                      i = getI(...)
+                      xlim = CELL_META$xlim
+                      ylim = CELL_META$ylim
+                      flush.console()
+                      circos.rect(region$start, 0, region$end, 1, col = "white", border = "black")
+                      circos.genomicPoints(region, value, pch = value$symbol, cex = 0.75, col = "red", ...)
+                    })
 circos.clear()
 
 

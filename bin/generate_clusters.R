@@ -25,7 +25,7 @@ threads <- as.numeric(args[2])
 # ============================================================================
 # Load packages and sourced files
 library(DECIPHER)
-
+library(data.table)
 
 # ============================================================================
 # Set global options
@@ -46,10 +46,19 @@ output_name <- output_name[[length(output_name)]]
 output_name <- strsplit(output_name, "\\.")[[1]][1]
 
 # ============================================================================
-# use clusterize to cluster similar sequences
+# use clusterize to cluster similar sequences, with a similarity cutoff based off the median sequence length
 set.seed(123)
-# cluster sequences that are at least 90% or higher (cutoff of 0.1) similar to one another and make the centers negative to find them later
-c1 <- Clusterize(dna, cutoff=0.1, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster
+
+median_width <- median(width(dna)) # round to the nearest hundredth
+cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 15001, 1000)), bp_end = c(500, 1000, seq(2000, 16000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.05)))
+if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
+  cutoff <- 0.95
+} else {
+  find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
+  cutoff <- find_cutoff$cutoff
+}
+# cluster sequences that are at least x% or higher similar to one another based on the median length of the input sequences
+c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE) # use invertCenters=TRUE to find a representative for each cluster
 
 # ============================================================================
 # Iterate through clusters, write out each cluster to a fasta file if there are at least 5 reads in that cluster
