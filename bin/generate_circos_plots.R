@@ -25,6 +25,11 @@ bounds <- args[3]
 total_reads <- args[4]
 file_name <- args[5]
 
+print(vcfs)
+print(bed)
+print(bounds)
+print(total_reads)
+print(file_name)
 # ============================================================================
 # Load packages and sourced files
 library(circlize)
@@ -110,10 +115,9 @@ vcf.read.depth <- function(vcf_file) {
 # ============================================================================
 # Load data
 
-print(vcfs)
 total_reads_dt <- fread(total_reads)
+print(total_reads_dt)
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
-print(total_reads_num)
 
 # ============================================================================
 # Preprocess bed file
