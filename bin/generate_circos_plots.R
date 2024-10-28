@@ -95,7 +95,9 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
   vcf_dt_depth <- gsub(";.*", "", vcf_dt$INFO)
-  vcf_dt_depth <- vcf_dt_depth[grep("DP", vcf_dt_depth)]
+  vcf_dt_depth <- vcf_dt_depth[grepl("DP", vcf_dt_depth)]
+  print(vcf_dt_depth)
+  print(vcf_dt)
   vcf_dt[, total_reads := as.numeric(gsub('DP=', "", vcf_dt_depth))]
   # keep only positions with called mutations 
   vcf_dt_muts <- vcf_dt[grepl("AC=", INFO) & grepl("PASS", FILTER)]
@@ -113,8 +115,9 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
 vcf.read.depth <- function(vcf_file) {
   vcf_dt <- fread(vcf_file)
   vcf_dt_depth <- gsub(";.*", "", vcf_dt$INFO)
-  vcf_dt_depth <- vcf_dt_depth[grep("DP", vcf_dt_depth)]
+  vcf_dt_depth <- vcf_dt_depth[grepl("DP", vcf_dt_depth)]
   vcf_dt_depth <- max(as.numeric(gsub('DP=', "", vcf_dt_depth)), na.rm = TRUE)
+  print(vcf_dt_depth)
   vcf_dt_depth
 }
 
@@ -122,8 +125,6 @@ vcf.read.depth <- function(vcf_file) {
 # Load data
 
 vcf_list <- fread(vcfs, header = F)
-print(vcf_list)
-print(vcf_list$V1)
 total_reads_dt <- fread(total_reads)
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
