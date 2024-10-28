@@ -25,8 +25,8 @@ def parse_args():
 	args = parser.parse_args()
 	return args
 
-def primer_filter(fasta, primer1, primer2, file_name):
-    """Filter out reads without both primers (allowing at most -m mismatches) using pairwise local alignments"""
+def primer_bounds(fasta, primer1, primer2, file_name):
+    """Find the primer boundaries on the reference fasta sequence"""
     with open(f"{file_name}.txt", 'w') as outfile:
         primer1_seq = Seq(primer1)
         primer2_seq = Seq(primer2)
@@ -56,7 +56,7 @@ def main():
     primer1 = inputs.primer1
     primer2 = inputs.primer2
     file_name = fasta.split('/')[-1].split('.')[0]
-    primer_filter(fasta, primer1, primer2, file_name)
+    primer_bounds(fasta, primer1, primer2, file_name)
 
 if __name__ =="__main__":
     main()

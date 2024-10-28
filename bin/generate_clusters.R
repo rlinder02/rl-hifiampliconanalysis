@@ -50,7 +50,8 @@ output_name <- strsplit(output_name, "\\.")[[1]][1]
 set.seed(123)
 
 median_width <- median(width(dna)) # round to the nearest hundredth
-cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 15001, 1000)), bp_end = c(500, 1000, seq(2000, 16000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.05)))
+#cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 15001, 1000)), bp_end = c(500, 1000, seq(2000, 16000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.05)))
+cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 7001, 1000)), bp_end = c(500, 1000, seq(2000, 8000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.1)))
 if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
   cutoff <- 0.95
 } else {

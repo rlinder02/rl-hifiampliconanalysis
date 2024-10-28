@@ -1,17 +1,17 @@
-process BOUNDARIES {
+process CIRCOS {
     tag "$meta.id"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/pysam_biopython:1938b0dd1fb1aab7':
-        'community.wave.seqera.io/library/pysam_biopython:1938b0dd1fb1aab7' }"
+        'https://docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1':
+        'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
 
     input:
-    tuple val(meta), path(ref), val(primer1), val(primer2)
+    tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.txt"), emit: txt
+    tuple val(meta), path("*.bam"), emit: bam
     path "versions.yml"           , emit: versions
 
     when:
@@ -21,11 +21,11 @@ process BOUNDARIES {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    primer_boundaries.py $ref -p1 $primer1 -p2 $primer2
+    generate_circos_plots.R $fasta $task.cpus
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        Python: \$(python --version | sed 's/Python //')
+        R: \$(R --version | head -1 | sed 's/R version //g')
     END_VERSIONS
     """
 
@@ -33,11 +33,11 @@ process BOUNDARIES {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.txt
+    touch ${prefix}.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        Python: \$(python --version | sed 's/Python //')
+        R: \$(R --version | head -1 | sed 's/R version //g')
     END_VERSIONS
     """
 }

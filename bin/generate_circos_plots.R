@@ -15,12 +15,13 @@
 # Parse command line inputs
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 2) {
-  stop("Usage: generate_circos_plots.R <fasta> <vcf>", call.=FALSE)
+if (length(args) < 3) {
+  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds>", call.=FALSE)
 }
 
-fasta <-  args[1]
-vcf <- as.numeric(args[2])
+vcfs <- args[1]
+bed <- args[2]
+bounds <- args[3]
 
 # ============================================================================
 # Load packages and sourced files
@@ -34,75 +35,97 @@ library(gridBase)
 # Set global options
 
 options(digits = 10)
-#projectDir <- getwd()
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox")
+projectDir <- getwd()
+# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox")
 
 
 # ============================================================================
 # Custom functions
+pre.process.bed <- function(bed_file, bounds_file) {
+  ref_bounds_dt <- fread(bounds_file)
+  ref_bed_dt <- fread(bed_file)
+  coord_shift <- ref_bed_dt$V2[1]
+  ref_bed_dt$V1 <- ref_bed_dt$V4
+  ref_bed_dt <- ref_bed_dt[, V4 := NULL]
+  ref_bed_dt[, V2 := V2 - coord_shift]
+  ref_bed_dt[, V3 := V3 - coord_shift]
+  ref_bed_dt[, V4 := V3 - V2]
+  ref_bed_dt[, V5 := cumsum(V4)]
+  ref_bed_dt[, start := c(0, V5[-length(V5)]+1)]
+  ref_bed_dt[, end := V5]
+  ref_bed_dt[, feature := gsub("Exon_", "", V1)]
+  columns <- c("feature", "start", "end")
+  ref_bed_dt <- ref_bed_dt[, ..columns]
+  # limit plotting to primer bounds 
+  ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
+  ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
+  ref_bed_dt
+}
+
+pre.process.vcf.structure <- function(vcf_file) {
+  vcf_dt <- fread(vcf_file)
+  names(vcf_dt)[10] <- "SAMPLE"
+  # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
+  vcf_dt[, POS := POS - 1 ]
+  vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
+  vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  struct_columns <- c("feature", "start", "end")
+  vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
+  vcf_dt_structure
+}
+
+pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
+  vcf_dt <- fread(vcf_file)
+  names(vcf_dt)[10] <- "SAMPLE"
+  # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
+  vcf_dt[, POS := POS - 1 ]
+  vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
+  vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  vcf_dt_depth <- gsub(";.*", "", vcf_dt$INFO)
+  vcf_dt_depth <- vcf_dt_depth[grep("DP", vcf_dt_depth)]
+  vcf_dt[, total_reads := as.numeric(gsub('DP=', "", vcf_dt_depth))]
+  # keep only positions with called mutations 
+  vcf_dt_muts <- vcf_dt[grepl("AC=", INFO) & grepl("PASS", FILTER)]
+  vcf_dt_muts[, TYPE := ifelse(grepl("INDEL", INFO), "INDEL", "SNV")]
+  vcf_dt_muts[, symbol := ifelse(grepl("SNV", TYPE), 16, 17)]
+  vcf_dt_muts[, alt_count :=  as.numeric(gsub(".*,", "", SAMPLE))]
+  vcf_dt_muts[, value := alt_count/total_reads]
+  vcf_dt_muts[, POS_END := POS +1]
+  muts_columns <- c("feature", "POS", "POS_END", "value", "symbol")
+  vcf_dt_muts_dt <- vcf_dt_muts[, ..muts_columns]
+  setnames(vcf_dt_muts_dt, old = c("POS", "POS_END"), new = c("start", "end"))
+  vcf_dt_muts_dt
+}
+
+vcf.read.depth <- function(vcf_file) {
+  vcf_dt <- fread(vcf_file)
+  vcf_dt_depth <- gsub(";.*", "", vcf_dt$INFO)
+  vcf_dt_depth <- vcf_dt_depth[grep("DP", vcf_dt_depth)]
+  vcf_dt_depth <- max(as.numeric(gsub('DP=', "", vcf_dt_depth)), na.rm = TRUE)
+  vcf_dt_depth
+}
 
 # ============================================================================
 # Load data
 
-ref_fasta <- "hSmarca5_cDNA.fasta"
-ref_bed <- "hSmarca5_cDNA.bed"
-ref_bounds <- "hSmarca5_cDNA.txt"
+bed_file <- "hSmarca5_cDNA.bed"
+bounds_file <- "hSmarca5_cDNA.txt"
 vcf1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7_modified.vcf.gz"
-fasta1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7.fasta"
 vcf2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39_modified.vcf.gz"
-fasta2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39.fasta"
+vcf_dfs <- list(vcf1, vcf2)
 total_reads <- 1285200
-
-ref_bounds_dt <- fread(ref_bounds)
-
-ref_bed_dt <- fread(ref_bed)
-coord_shift <- ref_bed_dt$V2[1]
-ref_bed_dt$V1 <- ref_bed_dt$V4
-ref_bed_dt <- ref_bed_dt[, V4 := NULL]
-ref_bed_dt[, V2 := V2 - coord_shift]
-ref_bed_dt[, V3 := V3 - coord_shift]
-ref_bed_dt[, V4 := V3 - V2]
-ref_bed_dt[, V5 := cumsum(V4)]
-ref_bed_dt[, start := c(0, V5[-length(V5)]+1)]
-ref_bed_dt[, end := V5]
-ref_bed_dt[, feature := gsub("Exon_", "", V1)]
-columns <- c("feature", "start", "end")
-ref_bed_dt <- ref_bed_dt[, ..columns]
-
-vcf_1 <- fread(vcf1)
-names(vcf_1)[10] <- "SAMPLE"
-
-# subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
-vcf_1[, POS := POS - 1 ]
-vcf_1[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
-vcf_1[, c("start", "end") := .(min(POS), max(POS)), by = feature]
-struct_columns <- c("feature", "start", "end")
-vcf_1_structure <- unique(vcf_1[, ..struct_columns])
-vcf_1_depth <- gsub(";.*", "", vcf_1$INFO)
-vcf_1_depth <- vcf_1_depth[grep("DP", vcf_1_depth)]
-vcf_1[, total_reads := as.numeric(gsub('DP=', "", vcf_1_depth))]
-vcf_1_depth <- max(as.numeric(gsub('DP=', "", vcf_1_depth)), na.rm = TRUE)
-
-# keep only positions with called mutations 
-vcf_1_muts <- vcf_1[grepl("AC=", INFO) & grepl("PASS", FILTER)]
-vcf_1_muts[, TYPE := ifelse(grepl("INDEL", INFO), "INDEL", "SNV")]
-vcf_1_muts[, symbol := ifelse(grepl("SNV", TYPE), 16, 17)]
-vcf_1_muts[, alt_count :=  as.numeric(gsub(".*,", "", SAMPLE))]
-vcf_1_muts[, alt_frequency := alt_count/total_reads]
-vcf_1_muts[, POS_END := POS +1]
-muts_columns <- c("feature", "POS", "POS_END", "alt_frequency", "symbol")
-vcf_1_muts_dt <- vcf_1_muts[, ..muts_columns]
-           
-# limit plotting to primer bounds 
-ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
-ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
+file_name <- strsplit(vcf1, "_cluster")[[1]][1]
 
 # ============================================================================
-# Preprocess data
+# Preprocess bed file
+ref_bed_dt <- pre.process.bed(bed_file, bounds_file)
 
 # ============================================================================
 # Generate Circos plot
 
+fileName <- paste0(file_name, "_circos_plot.png")
+png(fileName, height = 12, width = 8, units = "in", res = 1200)
+lgd = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
 circos.par("track.height" = 0.1, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90)
 circos.genomicInitialize(ref_bed_dt, plotType = NULL)
 # outermost track of wild-type exon structure
@@ -114,119 +137,26 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
   circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "white",
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
-# track for next species 
-circos.genomicTrack(vcf_1_structure, stack = TRUE, track.height = 0.05, bg.border = NA,
-                    panel.fun = function(region, value, ...) {
-                      i = getI(...)
-                      xlim = CELL_META$xlim
-                      ylim = CELL_META$ylim
-                      flush.console()
-                      circos.rect(region$start, 0, region$end, 1, col = "white", border = "black")
-                      circos.genomicPoints(region, value, pch = value$symbol, cex = 0.75, col = "red", ...)
+counter <- 1
+lapply(vcf_dfs, function(vcf) {
+  vcf_struct_df <- pre.process.vcf.structure(vcf)
+  vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
+  vcf_max_depth <- vcf.read.depth(vcf)
+  counter <<- counter + 1
+  trk_index = counter
+  circos.genomicTrack(vcf_struct_df, , ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+                        i = getI(...)
+                        xlim = CELL_META$xlim
+                        circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = trk_index)
+  })
+  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+                        i = getI(...)
+                        xlim = CELL_META$xlim
+                        circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = trk_index)
+  })
 })
-circos.genomicTrack(vcf_1_muts_dt, stack = TRUE, track.height = 0.05, bg.border = NA,
-                    panel.fun = function(region, value, ...) {
-                      i = getI(...)
-                      xlim = CELL_META$xlim
-                      ylim = CELL_META$ylim
-                      flush.console()
-                      circos.rect(region$start, 0, region$end, 1, col = "white", border = "black")
-                      circos.genomicPoints(region, value, pch = value$symbol, cex = 0.75, col = "red", ...)
-                    })
 circos.clear()
-
-
-circos.Track(vcf_1_structure, stack = TRUE, track.height = 0.05, bg.border = NA,
-                    panel.fun = function(region, value, ...) {
-                      i = getI(...)
-                      xlim = CELL_META$xlim
-                      ylim = CELL_META$ylim
-                      circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
-                      circos.segments(region$LF_start, y0, region$LF_start, y1, straight=TRUE, col = "red", lwd = 1, lty = 1)
-                      ifelse(value$Gene == "Smarca5", cex_val <- 1, cex_val <- 0.75)
-                      ifelse(value$Gene == "Smarca5", y_adj <- rep(2.6, nrow(value)), y_adj <- rep(2.3, nrow(value)))
-                      by_gene <- lapply(value$Gene, function(gene) {
-                        ifelse(gene %in% unique_hit_genes$Gene, font_type <- 2, font_type <- 1)
-                        print(value$Gene)
-                        print(font_type)
-                        circos.genomicText(region, value$Gene, y = y_adj, labels = value$Gene, track.index = 1, facing = "clockwise", niceFacing = TRUE, cex = cex_val, font = font_type)
-                      })
-                    })
-circos.clear()
-
-
-
-
-
-
-lgd_points = Legend(at = c("MOPC", "J", "Q", "TSM", "Z"), type = "lines", legend_gp = gpar(col = mycols[1:5], lwd = 3), title_position = "topleft", title = "Cell lines")
-lgd_shapes = Legend(at = c("TSD present", "No TSD"), type = "points", pch = c(16,17), title_position = "topleft")
-lgd_list_vertical = packLegend(lgd_points, lgd_shapes)
-#ins_df_dcast <- dcast(ins_df_clean, LF_chr + LF_start + LF_end ~ Cell_line, value.var = "value")
-
-plot_circle <- circle_plot(ins_dfs, "mm10", lgd_list_vertical)
-genome = "mm10"
-
-circle_plot <- function(ins_dfs, genome, legend) {
-  fileName <- paste0(getwd(), "/Plots/Genomewide_putatitve_gencDNA/putatitve_mouse_cell_line_gencDNA.png")
-  png(fileName, height = 12, width = 8, units = "in", res = 1200)
-  circos.par("track.height" = 0.1, circle.margin = c(0.1, 0.1, 0.1, 0.1))
-  circos.initializeWithIdeogram(species = genome, plotType = NULL)
-  
-  
-  
-  col_counter <- 0
-  circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
-    col_counter <<- col_counter + 1
-    chr = CELL_META$sector.index
-    xlim = CELL_META$xlim
-    ylim = CELL_META$ylim
-    circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
-    circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "white",
-                facing = "inside", niceFacing = TRUE)
-  }, track.height = 0.1, bg.border = NA)
-  y0 <- -10.5
-  y1 <- 3
-  counter <- 0
-  lapply(ins_dfs, function(df) {
-    counter <<- counter + 1
-    df <- df[, c("LF_chr", "LF_start", "LF_end", "value", "Gene", "symbol")]
-    #df <- rbind(df, empty_df)
-    circos.genomicTrack(df, numeric.column = 4, stack = TRUE, track.height = 0.05, bg.border = NA,
-                        panel.fun = function(region, value, ...) {
-                          i = getI(...)
-                          xlim = CELL_META$xlim
-                          ylim = CELL_META$ylim
-                          circos.genomicPoints(region, value, pch = value$symbol, cex = 0.75, col = "black", ...)
-                          circos.segments(region$LF_start, y0, region$LF_start, y1, straight=TRUE, col = "red", lwd = 1, lty = 1)
-                          ifelse(value$Gene == "Smarca5", cex_val <- 1, cex_val <- 0.75)
-                          ifelse(value$Gene == "Smarca5", y_adj <- rep(2.6, nrow(value)), y_adj <- rep(2.3, nrow(value)))
-                          by_gene <- lapply(value$Gene, function(gene) {
-                            ifelse(gene %in% unique_hit_genes$Gene, font_type <- 2, font_type <- 1)
-                            print(value$Gene)
-                            print(font_type)
-                            circos.genomicText(region, value$Gene, y = y_adj, labels = value$Gene, track.index = 1, facing = "clockwise", niceFacing = TRUE, cex = cex_val, font = font_type)
-                          })
-                        })
-    y0 <<- y0 + 2.5
-    y1 <<- y1 + 2.5
-  } )
-  for(sect in get.all.sector.index()) {
-    for(sn in get.all.track.index()[c(2:6)]) {
-      set.current.cell(sector.index = sect, track.index = sn)
-      circos.rect(CELL_META$cell.xlim[1], CELL_META$cell.ylim[1], CELL_META$cell.xlim[2], CELL_META$cell.ylim[2], col = mycols[sn-1])
-    }
-  }
-  circos.genomicIdeogram(species = genome, track.height = 0.1)
-  lapply(ins_dfs, function(df) {
-    df <- df[, c("LF_chr", "LF_start", "Ins_chr", "Ins_start")]
-    lapply(1:nrow(df), function (x) {
-      circos.link(sector.index1=df$Ins_chr[x], df$Ins_start[x], sector.index2=df$LF_chr[x], df$LF_start[x], directional = 1, arr.width = 0.1, arr.length = 0.1, arr.col = "black", col = "red")
-    } )
-  } )
-  circos.clear()
-  draw(legend, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
-  dev.off()
-}
+draw(lgd, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
+dev.off()
 # ============================================================================
 # Trouble-shooting

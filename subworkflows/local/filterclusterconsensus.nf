@@ -5,6 +5,7 @@ include { ALIGNCLUSTERS    } from '../../modules/local/alignclusters'
 include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
+include { CIRCOS           } from '../../modules/local/circos'
 
 workflow FILTERCLUSTERCONSENSUS {
 
@@ -57,8 +58,16 @@ workflow FILTERCLUSTERCONSENSUS {
                     def key = file.name.toString().split('/').last().split('_clu').first()
                     return tuple(key, file) }.groupTuple()
     ch_fastas_vcfs = fastas.combine(vcfs, by:0)
-    ch_fastas_vcfs.view()
-    //CALLCONSENSUS.out.vcf.toList().view()
+    //ch_fastas_vcfs.view()
+    CALLCONSENSUS.out.vcf.view()
+    ch_total_reads = CALLCONSENSUS.out.txt
+    ch_total_reads.view()
+    ch_bounds = BOUNDARIES.out.txt
+    ch_bounds.view()
+    
+    // CIRCOS (  )
+    // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
+
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
     versions = ch_versions                       // channel: [ versions.yml ]
