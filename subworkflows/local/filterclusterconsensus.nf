@@ -61,7 +61,7 @@ workflow FILTERCLUSTERCONSENSUS {
     // ch_fastas_vcfs = fastas.combine(vcfs, by:0)
     //ch_fastas_vcfs.view()
     ch_vcfs = CALLCONSENSUS.out.vcf
-    ch_total_reads = CALLCONSENSUS.out.txt
+    ch_total_reads = SPLITBAM.out.txt
     ch_bounds = BOUNDARIES.out.txt
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
