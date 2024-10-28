@@ -4,8 +4,8 @@ process CIRCOS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_r-tidyverse:7be262ddfd284a79':
-        'community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_r-tidyverse:7be262ddfd284a79' }"
+        'oras://community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_pruned:8987b0b2d3ee3ff2':
+        'community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_pruned:8987b0b2d3ee3ff2' }"
 
     input:
     tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads)
