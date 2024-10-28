@@ -15,14 +15,15 @@
 # Parse command line inputs
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 4) {
-  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds> <total_reads>", call.=FALSE)
+if (length(args) < 5) {
+  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds> <total_reads> <file_name>", call.=FALSE)
 }
 
 vcfs <- args[1]
 bed <- args[2]
 bounds <- args[3]
 total_reads <- args[4]
+file_name <- args[5]
 
 # ============================================================================
 # Load packages and sourced files
@@ -109,17 +110,14 @@ vcf.read.depth <- function(vcf_file) {
 # ============================================================================
 # Load data
 
-bed_file <- "hSmarca5_cDNA.bed"
-bounds_file <- "hSmarca5_cDNA.txt"
-vcf1 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster7_modified.vcf.gz"
-vcf2 <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster39_modified.vcf.gz"
-vcf_dfs <- list(vcf1, vcf2)
-total_reads <- 1285200
-file_name <- strsplit(vcf1, "_cluster")[[1]][1]
+print(vcfs)
+total_reads_dt <- fread(total_reads)
+total_reads_num <- as.numeric(total_reads_dt$V1[1])
+print(total_reads_num)
 
 # ============================================================================
 # Preprocess bed file
-ref_bed_dt <- pre.process.bed(bed_file, bounds_file)
+ref_bed_dt <- pre.process.bed(bed, bounds)
 
 # ============================================================================
 # Generate Circos plot
@@ -139,7 +137,7 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
 counter <- 1
-lapply(vcf_dfs, function(vcf) {
+lapply(vcfs, function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)

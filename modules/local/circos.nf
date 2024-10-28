@@ -1,5 +1,5 @@
 process CIRCOS {
-    tag "$meta.id"
+    tag "$meta"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -8,7 +8,7 @@ process CIRCOS {
         'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
 
     input:
-    tuple val(meta), path(vcf), path(bed), path(bounds), path(total_reads)
+    tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads)
 
     output:
     tuple val(meta), path("*.png"), emit: png
@@ -19,9 +19,9 @@ process CIRCOS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta}"
     """
-    generate_circos_plots.R $fasta $task.cpus
+    generate_circos_plots.R $vcfs $bed $bounds $total_reads $meta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -33,7 +33,7 @@ process CIRCOS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bam
+    touch ${prefix}.png
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

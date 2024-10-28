@@ -65,7 +65,6 @@ workflow FILTERCLUSTERCONSENSUS {
                                     meta = meta.id
                                     [meta, txt]
                                           }
-
     ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
                                     meta = meta.id
                                     [meta, txt]
@@ -73,10 +72,9 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
-    ch_vcfs_bed_bounds_reads.view()
-    //ch_vcfs_bed_bounds_reads.view()
-    // CIRCOS ( ch_vcfs_bed_bounds_reads )
-    // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
+    
+    CIRCOS ( ch_vcfs_bed_bounds_reads )
+    ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
 
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
