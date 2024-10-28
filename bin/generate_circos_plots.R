@@ -25,11 +25,6 @@ bounds <- args[3]
 total_reads <- args[4]
 file_name <- args[5]
 
-print(vcfs)
-print(bed)
-print(bounds)
-print(total_reads)
-print(file_name)
 # ============================================================================
 # Load packages and sourced files
 library(circlize)
@@ -50,9 +45,7 @@ projectDir <- getwd()
 # Custom functions
 pre.process.bed <- function(bed_file, bounds_file) {
   ref_bounds_dt <- fread(bounds_file)
-  print(ref_bounds_dt)
   ref_bed_dt <- fread(bed_file)
-  print(ref_bed_dt)
   coord_shift <- ref_bed_dt$V2[1]
   ref_bed_dt$V1 <- ref_bed_dt$V4
   ref_bed_dt <- ref_bed_dt[, V4 := NULL]
@@ -65,7 +58,6 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt[, feature := gsub("Exon_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
-  print(ref_bed_dt)
   # limit plotting to primer bounds
   if(ref_bounds_dt$V1[1] < ref_bed_dt$end[1]) {
     start_row <- 1
@@ -80,7 +72,6 @@ pre.process.bed <- function(bed_file, bounds_file) {
   }
   ref_bed_dt$end[end_row] <- ref_bounds_dt$V1[2]
   ref_bed_dt <- ref_bed_dt[start_row:end_row]
-  print(ref_bed_dt)
   ref_bed_dt
 }
 
@@ -131,10 +122,10 @@ vcf.read.depth <- function(vcf_file) {
 # Load data
 
 vcf_list <- fread(vcfs)
+print(vcf_list)
+print(vcf_list$V1)
 total_reads_dt <- fread(total_reads)
-
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
-print(total_reads_num)
 # ============================================================================
 # Preprocess bed file
 ref_bed_dt <- pre.process.bed(bed, bounds)
