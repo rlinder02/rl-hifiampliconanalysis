@@ -65,9 +65,11 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt[, feature := gsub("Exon_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
+  print(ref_bed_dt)
   # limit plotting to primer bounds 
   ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
   ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
+  print(ref_bed_dt)
   ref_bed_dt
 }
 
