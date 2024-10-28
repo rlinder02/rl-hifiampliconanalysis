@@ -121,7 +121,7 @@ vcf.read.depth <- function(vcf_file) {
 # ============================================================================
 # Load data
 
-vcf_list <- fread(vcfs)
+vcf_list <- fread(vcfs, header = F)
 print(vcf_list)
 print(vcf_list$V1)
 total_reads_dt <- fread(total_reads)
