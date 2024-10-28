@@ -8,10 +8,10 @@ process CIRCOS {
         'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(vcf), path(bed), path(bounds), path(total_reads)
 
     output:
-    tuple val(meta), path("*.bam"), emit: bam
+    tuple val(meta), path("*.png"), emit: png
     path "versions.yml"           , emit: versions
 
     when:
