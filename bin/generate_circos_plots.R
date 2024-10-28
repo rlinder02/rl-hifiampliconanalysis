@@ -94,8 +94,8 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  print(vcf_dt[grepl("INDEL", vcf_dt$INFO)])
   vcf_dt_depth <- gsub(";.*", "", vcf_dt$INFO)
-  print(vcf_dt_depth[!grepl("DP", vcf_dt_depth)])
   vcf_dt_depth <- vcf_dt_depth[grepl("DP", vcf_dt_depth)]
   print(vcf_dt_depth)
   print(vcf_dt)
