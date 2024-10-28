@@ -23,7 +23,7 @@ process CIRCOS {
     def prefix = task.ext.prefix ?: "${meta}"
     def vcfList = vcfs.join(' ')
     """
-    vcf_list=\$(echo $vcfs | sed 's/ /\n/g')
+    vcf_list=\$(echo $vcfs | sed 's/ /\\n/g')
     echo \$vcf_list
     
     generate_circos_plots.R \$vcf_list $bed $bounds $total_reads $meta
