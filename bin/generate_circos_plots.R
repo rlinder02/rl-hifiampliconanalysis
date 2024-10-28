@@ -15,13 +15,14 @@
 # Parse command line inputs
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
-  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds>", call.=FALSE)
+if (length(args) < 4) {
+  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds> <total_reads>", call.=FALSE)
 }
 
 vcfs <- args[1]
 bed <- args[2]
 bounds <- args[3]
+total_reads <- args[4]
 
 # ============================================================================
 # Load packages and sourced files
