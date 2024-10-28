@@ -12,10 +12,10 @@ process CALLCONSENSUS {
     tuple val(meta), path(bam), path(ref)
 
     output:
-    path("*modified.vcf.gz")                    , emit: vcf       , optional: true
-    path("*.fasta")                             , emit: con_fasta , optional: true
-    path("*.txt")                               , emit: txt       , optional: true
-    path "versions.yml"                         , emit: versions
+    tuple val(meta), path("*modified.vcf.gz")                    , emit: vcf       , optional: true
+    path("*.fasta")                                              , emit: con_fasta , optional: true
+    tuple val(meta), path("*.txt")                                , emit: txt       , optional: true
+    path "versions.yml"                                          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
