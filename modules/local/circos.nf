@@ -1,6 +1,7 @@
 process CIRCOS {
     tag "$meta"
     label 'process_low'
+    debug true
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -20,8 +21,12 @@ process CIRCOS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta}"
+    def vcfList = vcfs.join(' ')
     """
-    generate_circos_plots.R $vcfs $bed $bounds $total_reads $meta
+    vcf_list=\$(echo $vcfs | sed 's/ /\n/g')
+    echo \$vcf_list
+    
+    generate_circos_plots.R \$vcf_list $bed $bounds $total_reads $meta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
