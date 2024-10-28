@@ -67,8 +67,11 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt <- ref_bed_dt[, ..columns]
   print(ref_bed_dt)
   # limit plotting to primer bounds 
-  ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
-  ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
+  start_row <- max(which(ref_bed_dt$end < ref_bounds_dt$V1[1]))+1
+  ref_bed_dt$start[start_row] <- ref_bounds_dt$V1[1]
+  end_row <- min(which(ref_bed_dt$start > ref_bounds_dt$V1[2]))-1
+  ref_bed_dt$end[end_row] <- ref_bounds_dt$V1[2]
+  ref_bed_dt <- ref_bed_dt[start_row:end_row]
   print(ref_bed_dt)
   ref_bed_dt
 }
