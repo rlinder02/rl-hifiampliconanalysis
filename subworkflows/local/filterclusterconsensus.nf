@@ -18,7 +18,10 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_primer1 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer1] }
     ch_primer2 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer2] }
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
-    ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, bed] }
+    ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> 
+                                                                            meta = meta.id
+                                                                            [meta, bed] 
+                                                                            }
     ch_versions = Channel.empty()
 
     ch_fasta_primer1 = ch_aligned_fasta.combine(ch_primer1, by:0)
@@ -62,12 +65,20 @@ workflow FILTERCLUSTERCONSENSUS {
     //ch_fastas_vcfs.view()
     //ch_vcfs = CALLCONSENSUS.out.vcf
     ch_vcfs.view()
-    ch_total_reads = SPLITBAM.out.txt
-    ch_bounds = BOUNDARIES.out.txt
+    ch_total_reads = SPLITBAM.out.txt.map { meta, txt -> 
+                                    meta = meta.id
+                                    [meta, txt]
+                                          }
+
+    ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
+                                    meta = meta.id
+                                    [meta, txt]
+                                          }
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
+    ch_vcfs_bed.view()
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
-    ch_vcfs_bed_bounds_reads.view()
+    //ch_vcfs_bed_bounds_reads.view()
     // CIRCOS ( ch_vcfs_bed_bounds_reads )
     // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
 
