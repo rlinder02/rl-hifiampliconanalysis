@@ -50,7 +50,9 @@ projectDir <- getwd()
 # Custom functions
 pre.process.bed <- function(bed_file, bounds_file) {
   ref_bounds_dt <- fread(bounds_file)
+  print(ref_bounds_dt)
   ref_bed_dt <- fread(bed_file)
+  print(ref_bed_dt)
   coord_shift <- ref_bed_dt$V2[1]
   ref_bed_dt$V1 <- ref_bed_dt$V4
   ref_bed_dt <- ref_bed_dt[, V4 := NULL]
@@ -117,9 +119,9 @@ vcf.read.depth <- function(vcf_file) {
 
 vcf_list <- fread(vcfs)
 total_reads_dt <- fread(total_reads)
-print(total_reads_dt)
-total_reads_num <- as.numeric(total_reads_dt$V1[1])
 
+total_reads_num <- as.numeric(total_reads_dt$V1[1])
+print(total_reads_num)
 # ============================================================================
 # Preprocess bed file
 ref_bed_dt <- pre.process.bed(bed, bounds)
