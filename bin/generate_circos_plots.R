@@ -115,6 +115,7 @@ vcf.read.depth <- function(vcf_file) {
 # ============================================================================
 # Load data
 
+vcf_list <- fread(vcfs)
 total_reads_dt <- fread(total_reads)
 print(total_reads_dt)
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
@@ -141,7 +142,9 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
 counter <- 1
-lapply(vcfs, function(vcf) {
+lapply(vcf_list$V1, function(vcf) {
+  print(vcf)
+  flush.console()
   vcf_struct_df <- pre.process.vcf.structure(vcf)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
