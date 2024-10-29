@@ -100,7 +100,6 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt_muts[, TYPE := ifelse(grepl("INDEL", INFO), "INDEL", "SNV")]
   vcf_dt_muts[, symbol := ifelse(grepl("SNV", TYPE), 16, 17)]
   vcf_dt_muts[, alt_count := as.numeric(gsub(".*,", "", SAMPLE))]
-  print(vcf_dt_muts)
   vcf_dt_muts[, value := alt_count/total_reads]
   vcf_dt_muts[, POS_END := POS +1]
   muts_columns <- c("feature", "POS", "POS_END", "value", "symbol")
@@ -112,7 +111,6 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
 vcf.read.depth <- function(vcf_file) {
   vcf_dt <- fread(vcf_file)
   vcf_dt_depth <- max(as.numeric(str_match(vcf_dt$INFO, 'DP=(\\d+)')[,2]), na.rm = TRUE)
-  print(vcf_dt_depth)
   vcf_dt_depth
 }
 
@@ -145,25 +143,22 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
 }, track.height = 0.1, bg.border = NA)
 counter <- 1
 lapply(vcf_list$V1[c(1:5)], function(vcf) {
-  print(vcf)
-  flush.console()
   vcf_struct_df <- pre.process.vcf.structure(vcf)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
+  vcf_track_height <- vcf_max_depth/total_reads_num
+  print(vcf_track_height)
   counter <<- counter + 1
-  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = vcf_track_height, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = counter)
   })
-  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = vcf_track_height, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         print(vcf_muts_df)
-                        print(vcf_muts_df$symbol)
-                        print(vcf_muts_df$value)
                         print(region)
                         print(value)
-                        print(i)
                         print(ref_bed_dt)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = counter, ...)
