@@ -166,6 +166,7 @@ counter <- 1
 cluster_counter <- 0
 struct_dfs <- lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf)
+  print(vcf_struct_df)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   vcf_track_col <- vcf_max_depth/total_reads_num
