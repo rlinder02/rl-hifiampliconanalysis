@@ -163,7 +163,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
-                        circos.rect(region$start, 0, region$end, 1, col = col_fun, border = "white", track.index = counter)
+                        circos.rect(region$start, 0, region$end, 1, col = col_fun(vcf_track_height), border = "white", track.index = counter)
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
