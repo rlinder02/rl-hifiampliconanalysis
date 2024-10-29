@@ -172,7 +172,7 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
 }, track.height = 0.05, bg.border = NA)
 counter <- 1
 cluster_counter <- 0
-struct_dfs <- lapply(vcf_list$V1[c(1:5)], function(vcf) {
+struct_dfs <- lapply(vcf_list$V1, function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
   print(vcf_struct_df)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
