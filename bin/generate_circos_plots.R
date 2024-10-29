@@ -132,10 +132,13 @@ ref_bed_dt <- pre.process.bed(bed, bounds)
 # ============================================================================
 # Generate Circos plot
 
-f1 = colorRamp2(seq(0, 1, length = 3), c("blue", "#EEEEEE", "red"))
+col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
+lgd_reads = Legend(col_fun = col_fun, title_position = "topleft")
+lgd_list_vertical = packLegend(lgd_muts, lgd_reads)
+
 fileName <- paste0(file_name, "_circos_plot.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
-lgd = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
 circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90)
 circos.genomicInitialize(ref_bed_dt, plotType = NULL)
 # outermost track of wild-type exon structure
@@ -160,7 +163,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
-                        circos.rect(region$start, 0, region$end, 1, col = f1, border = "black", track.index = counter)
+                        circos.rect(region$start, 0, region$end, 1, col = col_fun, border = "white", track.index = counter)
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
@@ -169,7 +172,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   })
 })
 circos.clear()
-draw(lgd, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
+draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
 dev.off()
 # ============================================================================
 # Trouble-shooting
