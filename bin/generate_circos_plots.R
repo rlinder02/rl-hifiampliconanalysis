@@ -94,17 +94,13 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
-  print(vcf_dt[grepl("INDEL", vcf_dt$INFO)])
-  vcf_dt_depth <- gsub(";.*", "", vcf_dt$INFO)
-  vcf_dt_depth <- vcf_dt_depth[grepl("DP", vcf_dt_depth)]
-  print(vcf_dt_depth)
-  print(vcf_dt)
-  vcf_dt[, total_reads := as.numeric(gsub('DP=', "", vcf_dt_depth))]
+  vcf_dt[, total_reads := as.numeric(str_match(INFO, 'DP=(\\d+)')[,2])]
   # keep only positions with called mutations 
   vcf_dt_muts <- vcf_dt[grepl("AC=", INFO) & grepl("PASS", FILTER)]
   vcf_dt_muts[, TYPE := ifelse(grepl("INDEL", INFO), "INDEL", "SNV")]
   vcf_dt_muts[, symbol := ifelse(grepl("SNV", TYPE), 16, 17)]
   vcf_dt_muts[, alt_count :=  as.numeric(gsub(".*,", "", SAMPLE))]
+  print(vcf_dt_muts)
   vcf_dt_muts[, value := alt_count/total_reads]
   vcf_dt_muts[, POS_END := POS +1]
   muts_columns <- c("feature", "POS", "POS_END", "value", "symbol")
