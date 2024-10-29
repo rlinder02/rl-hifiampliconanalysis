@@ -144,7 +144,7 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
 counter <- 1
-lapply(vcf_list$V1, function(vcf) {
+lapply(vcf_list$V1[c(1:5)], function(vcf) {
   print(vcf)
   flush.console()
   vcf_struct_df <- pre.process.vcf.structure(vcf)
