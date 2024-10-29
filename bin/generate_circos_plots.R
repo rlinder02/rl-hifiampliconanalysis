@@ -132,6 +132,7 @@ ref_bed_dt <- pre.process.bed(bed, bounds)
 # ============================================================================
 # Generate Circos plot
 
+f1 = colorRamp2(seq(0, 1, length = 3), c("blue", "#EEEEEE", "red"))
 fileName <- paste0(file_name, "_circos_plot.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
 lgd = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
@@ -159,12 +160,12 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
-                        circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = counter)
+                        circos.rect(region$start, 0, region$end, 1, col = f1, border = "black", track.index = counter)
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
-                        circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = counter, ...)
+                        circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "black", track.index = counter, ...)
   })
 })
 circos.clear()
