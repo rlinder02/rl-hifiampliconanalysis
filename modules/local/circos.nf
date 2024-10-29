@@ -13,6 +13,7 @@ process CIRCOS {
 
     output:
     tuple val(meta), path("*.png"), emit: png
+    tuple val(meta), path("*.bed"), emit: struct_bed
     path "versions.yml"           , emit: versions
 
     when:
@@ -21,7 +22,6 @@ process CIRCOS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta}"
-    def vcfList = vcfs.join(' ')
     """
     vcf_list=\$(echo $vcfs | sed 's/ /\\n/g' > vcf_fofn.txt)
     
