@@ -144,18 +144,17 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
 counter <- 1
-lapply(vcf_list$V1[c(1:5)], function(vcf) {
+lapply(vcf_list$V1[c(1:5], function(vcf) {
   print(vcf)
   flush.console()
   vcf_struct_df <- pre.process.vcf.structure(vcf)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   counter <<- counter + 1
-  trk_index = counter
-  circos.genomicTrack(vcf_struct_df, , ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
-                        circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = trk_index)
+                        circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = counter)
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
@@ -167,7 +166,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
                         print(i)
                         print(ref_bed_dt)
                         xlim = CELL_META$xlim
-                        circos.genomicPoints(region, value, cex = 0.5, col = "red", track.index = trk_index)
+                        circos.genomicPoints(region, value, cex = 0.5, col = "red", track.index = counter)
   })
 })
 circos.clear()
