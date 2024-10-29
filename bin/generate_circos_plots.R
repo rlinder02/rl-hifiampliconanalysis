@@ -136,7 +136,7 @@ total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
 # Preprocess bed file
 ref_bed_dt <- pre.process.bed(bed, bounds)
-base_name <- paste0(strsplit(file_name, "_")[[1]][c(3,4)], "_")
+base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 
 # ============================================================================
 # Generate Circos plot
