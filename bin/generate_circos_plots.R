@@ -151,12 +151,12 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   counter <<- counter + 1
-  # circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
-  #                       i = getI(...)
-  #                       xlim = CELL_META$xlim
-  #                       circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = counter)
-  # })
-  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05 , panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+                        i = getI(...)
+                        xlim = CELL_META$xlim
+                        circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = counter)
+  })
+  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         print(vcf_muts_df)
                         print(vcf_muts_df$symbol)
