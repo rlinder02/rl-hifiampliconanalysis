@@ -135,7 +135,7 @@ ref_bed_dt <- pre.process.bed(bed, bounds)
 fileName <- paste0(file_name, "_circos_plot.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
 lgd = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
-circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, cell.padding = c(0, 0))
+circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90)
 circos.genomicInitialize(ref_bed_dt, plotType = NULL)
 # outermost track of wild-type exon structure
 circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
@@ -152,17 +152,17 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   vcf_track_height <- vcf_max_depth/total_reads_num
-  rescaled_track_height <- rescale(vcf_track_height, 0, 0.02, 1, 0.1)
+  #rescaled_track_height <- rescale(vcf_track_height, 0, 0.02, 1, 0.1)
   print(vcf_track_height)
   print(rescaled_track_height)
   counter <<- counter + 1
   print(counter)
-  circos.genomicTrack(vcf_struct_df, ylim = c(0.02, .1), track.height = rescaled_track_height, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.rect(region$start, 0, region$end, 1, col = "white", border = "black", track.index = counter)
   })
-  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0.02, 0.1), track.height = rescaled_track_height, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = counter, ...)
