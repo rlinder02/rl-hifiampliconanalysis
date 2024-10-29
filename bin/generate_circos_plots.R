@@ -119,6 +119,14 @@ rescale <- function(x, old_min, new_min, old_max, new_max) {
   rescaled_value
 }
 
+add.alpha <- function(col, alpha=1){
+  if(missing(col))
+    stop("Please provide a vector of colours.")
+  apply(sapply(col, col2rgb)/255, 2, 
+        function(x) 
+          rgb(x[1], x[2], x[3], alpha=alpha)) 
+}   
+
 # ============================================================================
 # Load data
 
@@ -133,6 +141,9 @@ ref_bed_dt <- pre.process.bed(bed, bounds)
 # Generate Circos plot
 
 col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+# color_func <- colorRampPalette(c(rgb(0, 0, 1, alpha = 0.5), rgb(1, 0, 0, alpha = 0.5)))
+# colors <- color_func(5)
+
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
 lgd_reads = Legend(col_fun = col_fun, title_position = "topleft")
 lgd_list_vertical = packLegend(lgd_muts, lgd_reads)
@@ -164,7 +175,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
-                        circos.rect(region$start, 0, region$end, 1, col = col_fun(vcf_track_col), border = "black", track.index = counter)
+                        circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.5), border = "black", track.index = counter)
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
