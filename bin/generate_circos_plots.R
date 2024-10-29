@@ -160,6 +160,7 @@ lapply(vcf_list$V1, function(vcf) {
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         print(vcf_muts_df)
+                        print(value$symbol)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = trk_index)
   })
