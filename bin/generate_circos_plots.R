@@ -135,7 +135,7 @@ ref_bed_dt <- pre.process.bed(bed, bounds)
 fileName <- paste0(file_name, "_circos_plot.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
 lgd = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
-circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90)
+circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, cell.padding = c(0, 0))
 circos.genomicInitialize(ref_bed_dt, plotType = NULL)
 # outermost track of wild-type exon structure
 circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
