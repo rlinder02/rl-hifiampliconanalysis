@@ -144,8 +144,8 @@ col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 # color_func <- colorRampPalette(c(rgb(0, 0, 1, alpha = 0.5), rgb(1, 0, 0, alpha = 0.5)))
 # colors <- color_func(5)
 
-lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft")
-lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of aligned reads")
+lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
+lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
 lgd_list_vertical = packLegend(lgd_muts, lgd_reads)
 
 fileName <- paste0(file_name, "_circos_plot.png")
