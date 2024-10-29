@@ -80,8 +80,11 @@ pre.process.vcf.structure <- function(vcf_file) {
   names(vcf_dt)[10] <- "SAMPLE"
   # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
   vcf_dt[, POS := POS - 1 ]
+  print(vcf_dt)
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
+  print(vcf_dt)
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  print(vcf_dt)
   struct_columns <- c("feature", "start", "end")
   vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
   vcf_dt_structure
@@ -166,7 +169,6 @@ counter <- 1
 cluster_counter <- 0
 struct_dfs <- lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf)
-  print(vcf_struct_df)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   vcf_track_col <- vcf_max_depth/total_reads_num
