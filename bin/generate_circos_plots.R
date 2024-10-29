@@ -166,7 +166,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
                         print(i)
                         print(ref_bed_dt)
                         xlim = CELL_META$xlim
-                        circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = counter ...)
+                        circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = counter, ...)
   })
 })
 circos.clear()
