@@ -96,10 +96,10 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
   vcf_dt[, total_reads := as.numeric(str_match(INFO, 'DP=(\\d+)')[,2])]
   # keep only positions with called mutations 
-  vcf_dt_muts <- vcf_dt[grepl("AC=|INDEL", INFO) & grepl("PASS", FILTER)]
+  vcf_dt_muts <- vcf_dt[grepl("AC=", INFO) & grepl("PASS", FILTER)]
   vcf_dt_muts[, TYPE := ifelse(grepl("INDEL", INFO), "INDEL", "SNV")]
   vcf_dt_muts[, symbol := ifelse(grepl("SNV", TYPE), 16, 17)]
-  vcf_dt_muts[, alt_count :=  ifelse(grepl("INDEL", INFO), as.numeric(gsub(".*:", "", SAMPLE)), as.numeric(gsub(".*,", "", SAMPLE)))]
+  vcf_dt_muts[, alt_count := as.numeric(gsub(".*,", "", SAMPLE))]
   print(vcf_dt_muts)
   vcf_dt_muts[, value := alt_count/total_reads]
   vcf_dt_muts[, POS_END := POS +1]
@@ -159,7 +159,7 @@ lapply(vcf_list$V1, function(vcf) {
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
-                        print(value)
+                        print(vcf_muts_df)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = trk_index)
   })
