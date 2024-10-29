@@ -152,7 +152,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   vcf_track_height <- vcf_max_depth/total_reads_num
-  rescaled_track_height <- rescale(vcf_track_height, 0, 0.05, 1, 0.2)
+  rescaled_track_height <- rescale(vcf_track_height, 0, 0.02, 1, 0.1)
   print(vcf_track_height)
   print(rescaled_track_height)
   counter <<- counter + 1
