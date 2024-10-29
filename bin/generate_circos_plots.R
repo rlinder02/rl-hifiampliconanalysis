@@ -84,6 +84,8 @@ pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   print(vcf_dt)
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   print(vcf_dt)
+  vcf_dt <- vcf_dt[!is.na(feature)]
+  print(vcf_dt)
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
   print(vcf_dt)
   struct_columns <- c("feature", "start", "end")
