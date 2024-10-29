@@ -140,12 +140,18 @@ total_reads_num <- as.numeric(total_reads_dt$V1[1])
 ref_bed_dt <- pre.process.bed(bed, bounds)
 base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 
+# # ============================================================================
+# # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
+# 
+# filter_vcf_dups <- lapply(vcf_list$V1, function(vcf) {
+#   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
+#   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
+# 
+
 # ============================================================================
 # Generate Circos plot
 
 col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
-# color_func <- colorRampPalette(c(rgb(0, 0, 1, alpha = 0.5), rgb(1, 0, 0, alpha = 0.5)))
-# colors <- color_func(5)
 
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
 lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
@@ -172,7 +178,6 @@ struct_dfs <- lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   vcf_track_col <- vcf_max_depth/total_reads_num
-  #rescaled_track_height <- rescale(vcf_track_height, 0, 0.02, 1, 0.1)
   counter <<- counter + 1
   cluster_counter <<- cluster_counter + 1
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
