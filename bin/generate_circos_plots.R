@@ -162,7 +162,9 @@ lapply(vcf_list$V1, function(vcf) {
                         print(vcf_muts_df)
                         print(vcf_muts_df$symbol)
                         print(vcf_muts_df$value)
+                        print(region)
                         print(value)
+                        print(i)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = vcf_muts_df$symbol, cex = 0.5, col = "red", track.index = trk_index)
   })
