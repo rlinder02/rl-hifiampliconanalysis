@@ -136,6 +136,7 @@ total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
 # Preprocess bed file
 ref_bed_dt <- pre.process.bed(bed, bounds)
+base_name <- paste0(strsplit(file_name, "_")[[1]][c(3,4)], "_")
 
 # ============================================================================
 # Generate Circos plot
@@ -162,13 +163,15 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.05, bg.border = NA)
 counter <- 1
-lapply(vcf_list$V1[c(1:5)], function(vcf) {
+cluster_counter <- 0
+struct_dfs <- lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf)
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   vcf_max_depth <- vcf.read.depth(vcf)
   vcf_track_col <- vcf_max_depth/total_reads_num
   #rescaled_track_height <- rescale(vcf_track_height, 0, 0.02, 1, 0.1)
   counter <<- counter + 1
+  cluster_counter <<- cluster_counter + 1
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
@@ -179,9 +182,15 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
   })
+  vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = "exon")
+  return(vcf_struct_gsds)
 })
 circos.clear()
 draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
 dev.off()
+
+struct_df <- do.call('rbind', struct_dfs)
+fwrite(struct_df, file = paste0(file_name, "_structure.bed"))
+
 # ============================================================================
 # Trouble-shooting
