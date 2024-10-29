@@ -154,7 +154,6 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   vcf_track_height <- vcf_max_depth/total_reads_num
   #rescaled_track_height <- rescale(vcf_track_height, 0, 0.02, 1, 0.1)
   print(vcf_track_height)
-  print(rescaled_track_height)
   counter <<- counter + 1
   print(counter)
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
