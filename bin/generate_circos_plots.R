@@ -190,7 +190,7 @@ draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("
 dev.off()
 
 struct_df <- do.call('rbind', struct_dfs)
-fwrite(struct_df, file = paste0(file_name, "_structure.bed"))
+fwrite(struct_df, file = paste0(file_name, "_structure.bed"), sep = "\t")
 
 # ============================================================================
 # Trouble-shooting
