@@ -156,6 +156,7 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   print(vcf_track_height)
   print(rescaled_track_height)
   counter <<- counter + 1
+  print(counter)
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = rescaled_track_height, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
@@ -163,10 +164,6 @@ lapply(vcf_list$V1[c(1:5)], function(vcf) {
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = rescaled_track_height, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
-                        print(vcf_muts_df)
-                        print(region)
-                        print(value)
-                        print(ref_bed_dt)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.5, col = "red", track.index = counter, ...)
   })
