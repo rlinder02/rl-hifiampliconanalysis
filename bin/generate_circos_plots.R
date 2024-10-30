@@ -75,6 +75,24 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt
 }
 
+pre.process.bed_wt <- function(bed_file) {
+  ref_bed_dt <- fread(bed_file)
+  coord_shift <- ref_bed_dt$V2[1]
+  ref_bed_dt$V1 <- ref_bed_dt$V4
+  ref_bed_dt <- ref_bed_dt[, V4 := NULL]
+  ref_bed_dt[, V2 := V2 - coord_shift]
+  ref_bed_dt[, V3 := V3 - coord_shift]
+  ref_bed_dt[, V4 := V3 - V2]
+  ref_bed_dt[, V5 := cumsum(V4)]
+  ref_bed_dt[, start := c(0, V5[-length(V5)]+1)]
+  ref_bed_dt[, end := V5]
+  ref_bed_dt[, feature := gsub("Exon_", "", V1)]
+  columns <- c("feature", "start", "end")
+  ref_bed_dt <- ref_bed_dt[, ..columns]
+  ref_bed_dt[, featureType := "exon"]
+  ref_bed_dt
+}
+
 pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt <- fread(vcf_file)
   names(vcf_dt)[10] <- "SAMPLE"
@@ -139,7 +157,7 @@ total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # Preprocess bed file
 ref_bed_dt <- pre.process.bed(bed, bounds)
 base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
-
+gene_name <- strsplit(file_name, "_")[[1]][3]
 # # ============================================================================
 # # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
 # 
@@ -197,8 +215,10 @@ circos.clear()
 draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
 dev.off()
 
+ref_bed <- pre.process.bed_wt(bed)
+ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = "exon")
 struct_df <- do.call('rbind', struct_dfs)
-fwrite(struct_df, file = paste0(file_name, "_structure.bed"), sep = "\t")
-
+all_df <- rbind(ref_bed_df, struct_df)
+fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t")
 # ============================================================================
 # Trouble-shooting
