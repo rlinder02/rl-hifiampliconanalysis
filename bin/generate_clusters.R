@@ -54,16 +54,9 @@ clusterize_recurse <- function(dna, cutoff, threads) {
     flush.console()
     return(cluster_list)
   }
-  # print("Finished clustering")
-  # flush.console()
-  # print(length(cluster_list))
-  # flush.console()
-  # cluster_list
 }
 # ============================================================================
 # Load data
-
-#fasta <- "/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/HU_PCR_MAPT_AMPLICON_FTLD_CBD_POSITIVE_filtered.fasta"
 dna <- readDNAStringSet(fasta)
 output_name <- strsplit(fasta, "/")[[1]]
 output_name <- output_name[[length(output_name)]]
@@ -85,7 +78,7 @@ if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
 # cluster sequences that are at least x% or higher similar to one another based on the median length of the input sequences
 cluster_list <- clusterize_recurse(dna, cutoff, threads)
 print(paste0("Final length of clusters is ", length(cluster_list)))
-flush.console
+flush.console()
 # ============================================================================
 # Iterate through clusters, write out each cluster to a fasta file if there are at least 5 reads in that cluster
 
