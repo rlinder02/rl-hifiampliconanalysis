@@ -45,10 +45,13 @@ clusterize_recurse <- function(dna, cutoff, threads) {
   if(length(cluster_list) > 10 & cutoff <= 0.9) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
+    print(length(cluster_list))
     print(cutoff)
     flush.console()
     clusterize_recurse(dna, cutoff, threads)
   } else {
+    print(paste0("new length is ", length(cluster_list)))
+    flush.console()
     return(cluster_list)
   }
   print("Finished clustering")
