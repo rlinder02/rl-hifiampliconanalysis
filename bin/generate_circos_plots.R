@@ -302,7 +302,7 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
   })
-  vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = "exon")
+  vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
   return(vcf_struct_gsds)
 })
 circos.clear()
@@ -316,6 +316,7 @@ ref_bed <- pre.process.bed_wt(bed)
 ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
 ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
 struct_df <- do.call('rbind', struct_dfs)
+struct_df[, featureType := ifelse(grepl("UTR", featureType), "UTR", "CDS")]
 struct_df_max_length <- struct_df[, max(end)]
 new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
 ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
