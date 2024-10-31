@@ -292,12 +292,12 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
   print(counter)
   flush.console()
   cluster_counter <<- cluster_counter + 1
-  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.075, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.5), border = "black", track.index = counter)
   })
-  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.075, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
