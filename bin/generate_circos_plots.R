@@ -26,6 +26,15 @@ total_reads <- args[4]
 file_name <- args[5]
 
 # ============================================================================
+# For trouble-shooting locally
+
+# vcf_list <- dir(pattern = "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster.*.vcf.gz")
+# bed <- "hSmarca5_cDNA.bed"
+# bounds <- "hSmarca5_cDNA.txt"
+# total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
+# file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
+
+# ============================================================================
 # Load packages and sourced files
 library(circlize)
 library(data.table)
@@ -95,14 +104,17 @@ pre.process.bed_wt <- function(bed_file) {
 
 pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt <- fread(vcf_file)
+  vcf_max_depth <- max(as.numeric(str_match(vcf_dt$INFO, 'DP=(\\d+)')[,2]), na.rm = TRUE)
   names(vcf_dt)[10] <- "SAMPLE"
   # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt <- vcf_dt[!is.na(feature)]
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  #print(vcf_dt)
   struct_columns <- c("feature", "start", "end")
   vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
+  vcf_dt_structure[, maxDepth := vcf_max_depth]
   vcf_dt_structure
 }
 
@@ -122,10 +134,40 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt_muts[, alt_count := as.numeric(gsub(".*,", "", SAMPLE))]
   vcf_dt_muts[, value := alt_count/total_reads]
   vcf_dt_muts[, POS_END := POS +1]
-  muts_columns <- c("feature", "POS", "POS_END", "value", "symbol")
+  muts_columns <- c("feature", "POS", "POS_END", "value", "symbol", "REF", "ALT")
   vcf_dt_muts_dt <- vcf_dt_muts[, ..muts_columns]
   setnames(vcf_dt_muts_dt, old = c("POS", "POS_END"), new = c("start", "end"))
   vcf_dt_muts_dt
+}
+
+identify_identical_dfs <- function(df_list) {
+  # Create a list of indices of identical data frames
+  identical_groups <- list()
+  checked <- rep(FALSE, length(df_list))
+  for (i in seq_along(df_list)) {
+    if (!checked[i]) {
+      identical_indices <- which(map_lgl(df_list, ~ identical(df_list[[i]], .)))
+      identical_groups <- append(identical_groups, list(identical_indices))
+      checked[identical_indices] <- TRUE
+    }
+  }
+  identical_groups
+}
+
+find_common_values <- function(lst1, lst2) {
+  common_values <- list()
+  # Iterate over each element in the first list
+  for (element1 in lst1) {
+    # Iterate over each element in the second list
+    for (element2 in lst2) {
+      find_intersection <- intersect(element1, element2)
+      flush.console()
+      if (length(find_intersection) > 1) {
+        common_values <- append(common_values, list(find_intersection))
+      }
+    }
+  }
+  return(unique(common_values))
 }
 
 vcf.read.depth <- function(vcf_file) {
@@ -150,7 +192,7 @@ add.alpha <- function(col, alpha=1){
 # ============================================================================
 # Load data
 
-vcf_list <- fread(vcfs, header = F)
+#vcf_list <- fread(vcfs, header = F)
 total_reads_dt <- fread(total_reads)
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
@@ -158,13 +200,61 @@ total_reads_num <- as.numeric(total_reads_dt$V1[1])
 ref_bed_dt <- pre.process.bed(bed, bounds)
 base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 gene_name <- strsplit(file_name, "_")[[1]][3]
-# # ============================================================================
-# # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
-# 
-# filter_vcf_dups <- lapply(vcf_list$V1, function(vcf) {
-#   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
-#   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
-# 
+# ============================================================================
+# Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
+vcf_muts <- lapply(vcf_list$V1, function(vcf) {
+  vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
+  muts_columns <- c("feature", "start", "end", "symbol", "REF", "ALT")
+  vcf_muts_df <- vcf_muts_df[, ..muts_columns]
+  vcf_muts_df 
+} )
+
+vcf_muts_values <- lapply(vcf_list$V1, function(vcf) {
+  vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
+  muts_columns <- c("feature", "start", "end", "value", "symbol", "REF", "ALT")
+  vcf_muts_df <- vcf_muts_df[, ..muts_columns]
+  vcf_muts_df 
+} )
+
+vcf_structs <- lapply(vcf_list$V1, function(vcf) {
+  vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
+  struct_columns <- c("feature", "start", "end")
+  vcf_struct_df <- vcf_struct_df[, ..struct_columns]
+  vcf_struct_df
+} )
+
+vcf_structs_depth <- lapply(vcf_list$V1, function(vcf) {
+  vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
+  struct_columns <- c("feature", "start", "end", "maxDepth")
+  vcf_struct_df <- vcf_struct_df[, ..struct_columns]
+  vcf_struct_df
+} ) 
+# Identify groups of identical data frames
+identical_mut_groups <- identify_identical_dfs(vcf_muts)
+identical_struct_groups <- identify_identical_dfs(vcf_structs)
+# Find the intersection of data frames that are identical between both the structural and mutation data frames, outputting a list
+common_values <- find_common_values(identical_struct_groups, identical_mut_groups)
+# Find the unique data frames that are not duplicated
+if(length(common_values) > 0) {
+  unique_mut_dfs <- vcf_muts_values[-c(unique(unlist(common_values)))]
+  unique_struct_dfs <- vcf_structs_depth[-c(unique(unlist(common_values)))]
+  # Merge identical mutation data frames such that the value column is the average of all identical value columns
+  new_mut_dfs <- lapply(common_values, function(idx) {
+    all_values <- do.call('rbind', vcf_muts_values[c(idx)])
+    mean_values <- all_values[, .(value = mean(value)), by = .(feature, start, end, symbol, REF, ALT)]
+    setcolorder(mean_values, c("feature", "start", "end", "value", "symbol", "REF", "ALT"))
+    mean_values
+  })
+  new_struct_dfs <- lapply(common_values, function(idx) {
+    all_values <- do.call('rbind', vcf_structs_depth[c(idx)])
+    combined_depth <- all_values[, .(maxDepth = sum(maxDepth)), by = .(feature, start, end)]
+    setcolorder(combined_depth, c("feature", "start", "end", "maxDepth"))
+    combined_depth
+  })
+  # if there are identical data frames, then overwrite the list of data frames stored in vcf_muts_values and vcf_structs_depth
+  vcf_muts_values <- append(new_mut_dfs, unique_mut_dfs)
+  vcf_structs_depth <- append(new_struct_dfs, unique_struct_dfs)
+}
 
 # ============================================================================
 # Generate Circos plot
@@ -187,23 +277,27 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
   circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
   circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "white",
               facing = "inside", niceFacing = TRUE)
-}, track.height = 0.05, bg.border = NA)
+}, track.height = 0.075, bg.border = NA)
 counter <- 1
 cluster_counter <- 0
-struct_dfs <- lapply(vcf_list$V1, function(vcf) {
-  vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
-  print(vcf_struct_df)
-  vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
-  vcf_max_depth <- vcf.read.depth(vcf)
+struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
+  vcf_struct_df <- vcf_structs_depth[[idx]]
+  vcf_muts_df <- vcf_muts_values[[idx]]
+  vcf_max_depth <- vcf_struct_df$maxDepth[1]
+  # remove the depth column from vcf_struct_df
+  struct_cols <- c("feature", "start", "end")
+  vcf_struct_df <- vcf_struct_df[, ..struct_cols]
   vcf_track_col <- vcf_max_depth/total_reads_num
   counter <<- counter + 1
+  print(counter)
+  flush.console()
   cluster_counter <<- cluster_counter + 1
-  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.075, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.5), border = "black", track.index = counter)
   })
-  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.075, bg.border = NA, panel.fun = function(region, value, ...) {
                         i = getI(...)
                         xlim = CELL_META$xlim
                         circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
@@ -215,10 +309,17 @@ circos.clear()
 draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
 dev.off()
 
+# ============================================================================
+# Generate a bed file of wild-type and all amplicons' exon structures
+
 ref_bed <- pre.process.bed_wt(bed)
+ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
 ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = "exon")
 struct_df <- do.call('rbind', struct_dfs)
+struct_df_max_length <- struct_df[, max(end)]
+new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
+ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
 all_df <- rbind(ref_bed_df, struct_df)
-fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t")
+fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
 # ============================================================================
 # Trouble-shooting
