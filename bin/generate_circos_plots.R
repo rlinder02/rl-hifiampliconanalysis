@@ -98,7 +98,7 @@ pre.process.bed_wt <- function(bed_file) {
   ref_bed_dt[, feature := gsub("CDS_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
-  ref_bed_dt[, featureType := ifelse(grepl("CDS", feature), "CDS", "UTR")]
+  ref_bed_dt[, featureType := ifelse(grepl("UTR", feature), "UTR", "CDS")]
   ref_bed_dt
 }
 
