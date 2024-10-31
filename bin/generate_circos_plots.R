@@ -64,7 +64,7 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt[, V5 := cumsum(V4)]
   ref_bed_dt[, start := c(0, V5[-length(V5)]+1)]
   ref_bed_dt[, end := V5]
-  ref_bed_dt[, feature := gsub("Exon_", "", V1)]
+  ref_bed_dt[, feature := gsub("CDS_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
   # limit plotting to primer bounds
@@ -95,10 +95,10 @@ pre.process.bed_wt <- function(bed_file) {
   ref_bed_dt[, V5 := cumsum(V4)]
   ref_bed_dt[, start := c(0, V5[-length(V5)]+1)]
   ref_bed_dt[, end := V5]
-  ref_bed_dt[, feature := gsub("Exon_", "", V1)]
+  ref_bed_dt[, feature := gsub("CDS_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
-  ref_bed_dt[, featureType := "exon"]
+  ref_bed_dt[, featureType := ifelse(grepl("CDS", feature), "CDS", "UTR")]
   ref_bed_dt
 }
 
@@ -314,7 +314,7 @@ dev.off()
 
 ref_bed <- pre.process.bed_wt(bed)
 ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
-ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = "exon")
+ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
 struct_df <- do.call('rbind', struct_dfs)
 struct_df_max_length <- struct_df[, max(end)]
 new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
