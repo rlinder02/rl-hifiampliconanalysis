@@ -192,7 +192,7 @@ add.alpha <- function(col, alpha=1){
 # ============================================================================
 # Load data
 
-#vcf_list <- fread(vcfs, header = F)
+vcf_list <- fread(vcfs, header = F)
 total_reads_dt <- fread(total_reads)
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
