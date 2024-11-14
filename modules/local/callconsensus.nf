@@ -14,7 +14,7 @@ process CALLCONSENSUS {
     output:
     path("*modified.vcf.gz")                                     , emit: vcf       , optional: true
     path("*.fasta")                                              , emit: con_fasta , optional: true
-    path("*.bed")                                                , emit: orf_bed   , optional: true
+    path("*/orfipy/*_longest.bed")                               , emit: orf_bed   , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt       , optional: true
     path "versions.yml"                                          , emit: versions
 
@@ -95,6 +95,7 @@ process CALLCONSENSUS {
             ${prefix}_\${cluster_id}.fasta \\
             --bed ${prefix}_\${cluster_id}.bed \\
             --longest \\
+            --outdir orfipy \\
             --procs $task.cpus
     else 
         rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
