@@ -24,8 +24,9 @@ process CIRCOS {
     def prefix = task.ext.prefix ?: "${meta}"
     """
     vcf_list=\$(echo $vcfs | sed 's/ /\\n/g' > vcf_fofn.txt)
-    
-    generate_circos_plots.R vcf_fofn.txt $bed $bounds $total_reads $meta $orfs
+    orf_list=\$(echo $orfs | sed 's/ /\\n/g' > orf_fofn.txt)
+
+    generate_circos_plots.R vcf_fofn.txt $bed $bounds $total_reads $meta orf_fofn.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -195,6 +195,7 @@ add.alpha <- function(col, alpha=1){
 # Load data
 
 vcf_list <- fread(vcfs, header = F)
+orf_list <- fread(orfs, header = F)
 total_reads_dt <- fread(total_reads)
 total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
@@ -204,6 +205,11 @@ base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 gene_name <- strsplit(file_name, "_")[[1]][3]
 # ============================================================================
 # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
+orf_dfs <- lapply(orf_list$V1, function(orf) {
+  orf_df <- fread(orf, header = T)
+  orf_df
+})
+
 vcf_muts <- lapply(vcf_list$V1, function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   muts_columns <- c("feature", "start", "end", "symbol", "REF", "ALT")
