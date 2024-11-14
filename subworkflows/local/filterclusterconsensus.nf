@@ -58,6 +58,9 @@ workflow FILTERCLUSTERCONSENSUS {
     // ch_fastas = CALLCONSENSUS.out.con_fasta.map { file -> 
     //                 def key = file.name.toString().split('/').last().split('_clu').first()
     //                 return tuple(key, file) }.groupTuple()
+    ch_orf_beds = CALLCONSENSUS.out.orf_bed.map { file -> 
+                    def key = file.name.toString().split('/').last().split('_clu').first()
+                    return tuple(key, file) }.groupTuple()
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first()
                     return tuple(key, file) }.groupTuple()
@@ -72,8 +75,9 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
+    ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds, by:0)
     
-    CIRCOS ( ch_vcfs_bed_bounds_reads )
+    CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
     ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
 
     emit:

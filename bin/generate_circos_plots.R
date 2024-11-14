@@ -15,8 +15,8 @@
 # Parse command line inputs
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 5) {
-  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds> <total_reads> <file_name>", call.=FALSE)
+if (length(args) < 6) {
+  stop("Usage: generate_circos_plots.R <vcfs> <bed> <bounds> <total_reads> <file_name> <orfs>", call.=FALSE)
 }
 
 vcfs <- args[1]
@@ -24,15 +24,17 @@ bed <- args[2]
 bounds <- args[3]
 total_reads <- args[4]
 file_name <- args[5]
+orfs <- args[6]
 
 # ============================================================================
 # For trouble-shooting locally
 
-# vcf_list <- dir(pattern = "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_cluster.*.vcf.gz")
-# bed <- "hSmarca5_cDNA.bed"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hSmarca5_cDNA_full.bed"
 # bounds <- "hSmarca5_cDNA.txt"
 # total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
 # file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
+# orfs <- 
 
 # ============================================================================
 # Load packages and sourced files
@@ -47,7 +49,7 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox")
+# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
 
 
 # ============================================================================
@@ -111,7 +113,7 @@ pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt <- vcf_dt[!is.na(feature)]
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
-  #print(vcf_dt)
+  print(vcf_dt)
   struct_columns <- c("feature", "start", "end")
   vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
   vcf_dt_structure[, maxDepth := vcf_max_depth]
@@ -216,12 +218,6 @@ vcf_muts_values <- lapply(vcf_list$V1, function(vcf) {
   vcf_muts_df 
 } )
 
-vcf_structs <- lapply(vcf_list$V1, function(vcf) {
-  vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
-  struct_columns <- c("feature", "start", "end")
-  vcf_struct_df <- vcf_struct_df[, ..struct_columns]
-  vcf_struct_df
-} )
 
 vcf_structs_depth <- lapply(vcf_list$V1, function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
@@ -255,6 +251,19 @@ if(length(common_values) > 0) {
   vcf_muts_values <- append(new_mut_dfs, unique_mut_dfs)
   vcf_structs_depth <- append(new_struct_dfs, unique_struct_dfs)
 }
+
+# Calculate coverage across all aligned sites 
+coverage_dt <- do.call('rbind', lapply(vcf_list$V1, function(vcf) {
+  vcf_dt <- fread(vcf)
+  vcf_dt[, start_pos := POS - 1 ]
+  vcf_dt[, end_pos := start_pos + 1]
+  vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
+  vcf_dt <- vcf_dt[!is.na(feature)]
+  vcf_dt[, total_reads := as.numeric(str_match(INFO, 'DP=(\\d+)')[,2])]
+  columns <- c("feature", "start_pos", "end_pos", "total_reads")
+  vcf_dt[, ..columns]
+} ) )
+combined_coverage_dt <- coverage_dt[, .(read_depth = sum(total_reads)), by = c("feature", "start_pos", "end_pos")]
 
 # ============================================================================
 # Generate Circos plot
@@ -324,3 +333,88 @@ all_df <- rbind(ref_bed_df, struct_df)
 fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
 # ============================================================================
 # Trouble-shooting
+## Modified circos plot 
+
+# ============================================================================
+# Generate Circos plot
+# place_holder_length <- round((ref_bed_dt$end[nrow(ref_bed_dt)] - ref_bed_dt$start[1])*0.05, 0)
+# place_holder_start <- ref_bed_dt$start[1] - place_holder_length
+# place_holder_end <- ref_bed_dt$start[1] - 1
+# place_holder_sector_dt <- data.table(feature = "placeholder", start = place_holder_start, end = place_holder_end)
+# ref_bed_dt_placeholder <- rbind(place_holder_sector_dt, ref_bed_dt)
+# 
+# num_sectors <- ref_bed_dt[, uniqueN(feature)]
+# 
+# col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+# 
+# lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
+# lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
+# lgd_list_vertical = packLegend(lgd_muts, lgd_reads)
+# 
+# fileName <- paste0(file_name, "_circos_plot.png")
+# png(fileName, height = 12, width = 8, units = "in", res = 1200)
+# circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 15))
+# circos.genomicInitialize(ref_bed_dt, plotType = NULL)
+# # outermost track of wild-type exon structure
+# circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
+#   chr = CELL_META$sector.index
+#   xlim = CELL_META$xlim
+#   ylim = CELL_META$ylim
+#   #circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
+#   circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "black",
+#               facing = "inside", niceFacing = TRUE)
+# }, track.height = 0.05, bg.border = NA)
+# 
+# circos.genomicTrack(combined_coverage_dt, numeric.column = 4, ylim = range(combined_coverage_dt$read_depth, na.rm = TRUE), track.height = 0.075, panel.fun = function(region, value, ...) {
+#     print(CELL_META$sector.index)
+#     flush.console()
+#     circos.genomicLines(region, value, col = "blue", lwd = 1, ...)
+#     if (CELL_META$sector.index == "5'" & CELL_META$track.index == 2) {
+#       circos.yaxis(at = range(combined_coverage_dt$read_depth), labels = format(range(combined_coverage_dt$read_depth), scientific = TRUE, digits = 2), labels.cex = 0.5)
+#     }
+# } )
+# 
+# circos.clear()
+# 
+# 
+# 
+# max(combined_coverage_dt$read_depth, na.rm = TRUE)
+# circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
+#   chr = CELL_META$sector.index
+#   xlim = CELL_META$xlim
+#   ylim = CELL_META$ylim
+#   circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
+#   circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "white",
+#               facing = "inside", niceFacing = TRUE)
+# }, track.height = 0.075, bg.border = NA)
+# counter <- 1
+# cluster_counter <- 0
+# struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
+#   vcf_struct_df <- vcf_structs_depth[[idx]]
+#   vcf_muts_df <- vcf_muts_values[[idx]]
+#   vcf_max_depth <- vcf_struct_df$maxDepth[1]
+#   # remove the depth column from vcf_struct_df
+#   struct_cols <- c("feature", "start", "end")
+#   vcf_struct_df <- vcf_struct_df[, ..struct_cols]
+#   vcf_track_col <- vcf_max_depth/total_reads_num
+#   counter <<- counter + 1
+#   print(counter)
+#   flush.console()
+#   cluster_counter <<- cluster_counter + 1
+#   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+#     i = getI(...)
+#     xlim = CELL_META$xlim
+#     circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.5), border = "black", track.index = counter)
+#   })
+#   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
+#     i = getI(...)
+#     xlim = CELL_META$xlim
+#     circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
+#   })
+#   vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
+#   return(vcf_struct_gsds)
+# })
+# circos.clear()
+# draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
+# dev.off()
+# 

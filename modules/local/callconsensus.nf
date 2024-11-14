@@ -5,8 +5,8 @@ process CALLCONSENSUS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bcftools_minimap2_samtools:c2489975f9638f9b':
-        'community.wave.seqera.io/library/bcftools_minimap2_samtools:c2489975f9638f9b' }"
+        'oras://community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2':
+        'community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2' }"
 
     input:
     tuple val(meta), path(bam), path(ref)
@@ -14,6 +14,7 @@ process CALLCONSENSUS {
     output:
     path("*modified.vcf.gz")                                     , emit: vcf       , optional: true
     path("*.fasta")                                              , emit: con_fasta , optional: true
+    path("*.bed")                                                , emit: orf_bed   , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt       , optional: true
     path "versions.yml"                                          , emit: versions
 
@@ -90,6 +91,11 @@ process CALLCONSENSUS {
             -f $ref \\
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
+        orfipy \\
+            ${prefix}_\${cluster_id}.fasta \\
+            --bed ${prefix}_\${cluster_id}.bed \\
+            --longest \\
+            --procs $task.cpus
     else 
         rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
     fi

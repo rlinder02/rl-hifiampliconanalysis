@@ -9,7 +9,7 @@ process CIRCOS {
         'community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_pruned:8987b0b2d3ee3ff2' }"
 
     input:
-    tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads)
+    tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads), path(orfs)
 
     output:
     tuple val(meta), path("*.png"), emit: png
@@ -25,7 +25,7 @@ process CIRCOS {
     """
     vcf_list=\$(echo $vcfs | sed 's/ /\\n/g' > vcf_fofn.txt)
     
-    generate_circos_plots.R vcf_fofn.txt $bed $bounds $total_reads $meta
+    generate_circos_plots.R vcf_fofn.txt $bed $bounds $total_reads $meta $orfs
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
