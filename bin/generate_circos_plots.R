@@ -301,6 +301,7 @@ combined_coverage_dt <- coverage_dt[, .(read_depth = sum(total_reads)), by = c("
 # Generate Circos plot
 
 num_sectors <- ref_bed_dt[, uniqueN(feature)]
+first_sector <- ref_bed_dt$feature[1]
 col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
@@ -326,7 +327,7 @@ circos.genomicTrack(combined_coverage_dt, numeric.column = 4, ylim = range(combi
   print(CELL_META$sector.index)
   flush.console()
   circos.genomicLines(region, value, col = "blue", lwd = 1, ...)
-  if (CELL_META$sector.index == "5'" & CELL_META$track.index == 2) {
+  if (CELL_META$sector.index == first_sector & CELL_META$track.index == 2) {
     circos.yaxis(at = range(combined_coverage_dt$read_depth), labels = format(range(combined_coverage_dt$read_depth), scientific = TRUE, digits = 2), labels.cex = 0.5)
   }
 } )
@@ -349,7 +350,7 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
     i = getI(...)
     xlim = CELL_META$xlim
-    circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.5), border = "black", track.index = counter)
+    circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.4), border = "black", track.index = counter)
   })
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
     i = getI(...)
@@ -361,7 +362,7 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
     i = getI(...)
     xlim = CELL_META$xlim
     #circos.arrow(CELL_META$xlim[1], CELL_META$xlim[2], arrow.head.width = CELL_META$yrange*0.8, arrow.head.length = cm_x(0.5), col = add.alpha("green", 0.5))
-    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("black", 0.5), border = NA, track.index = counter)
+    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("black", 0.4), border = NA, track.index = counter)
   })
   vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
   return(vcf_struct_gsds)
