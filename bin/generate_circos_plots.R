@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "hSmarca5_cDNA_full.bed"
-bounds <- "hSmarca5_cDNA.txt"
-total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
-file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hSmarca5_cDNA_full.bed"
+# bounds <- "hSmarca5_cDNA.txt"
+# total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
+# file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
+# orfs <- "orf_fofn.txt"
 
 # ============================================================================
 # Load packages and sourced files
@@ -49,7 +49,7 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
+# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
 
 
 # ============================================================================
@@ -176,7 +176,6 @@ find_common_values <- function(lst1, lst2) {
     # Iterate over each element in the second list
     for (element2 in lst2) {
       find_intersection <- intersect(element1, element2)
-      flush.console()
       if (length(find_intersection) > 1) {
         common_values <- append(common_values, list(find_intersection))
       }
@@ -244,7 +243,6 @@ vcf_muts_values <- lapply(vcf_list$V1, function(vcf) {
   vcf_muts_df 
 } )
 
-
 vcf_structs_depth <- lapply(vcf_list$V1, function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
   struct_columns <- c("feature", "start", "end", "maxDepth")
@@ -306,78 +304,8 @@ col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
 lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
-lgd_list_vertical = packLegend(lgd_muts, lgd_reads)
-
-fileName <- paste0(file_name, "_circos_plot.png")
-png(fileName, height = 12, width = 8, units = "in", res = 1200)
-circos.par("track.height" = 0.05, circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90)
-circos.genomicInitialize(ref_bed_dt, plotType = NULL)
-# outermost track of wild-type exon structure
-circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
-  chr = CELL_META$sector.index
-  xlim = CELL_META$xlim
-  ylim = CELL_META$ylim
-  circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
-  circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "white",
-              facing = "inside", niceFacing = TRUE)
-}, track.height = 0.075, bg.border = NA)
-counter <- 1
-cluster_counter <- 0
-struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
-  vcf_struct_df <- vcf_structs_depth[[idx]]
-  vcf_muts_df <- vcf_muts_values[[idx]]
-  vcf_max_depth <- vcf_struct_df$maxDepth[1]
-  # remove the depth column from vcf_struct_df
-  struct_cols <- c("feature", "start", "end")
-  vcf_struct_df <- vcf_struct_df[, ..struct_cols]
-  vcf_track_col <- vcf_max_depth/total_reads_num
-  counter <<- counter + 1
-  print(counter)
-  flush.console()
-  cluster_counter <<- cluster_counter + 1
-  circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
-                        i = getI(...)
-                        xlim = CELL_META$xlim
-                        circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.5), border = "black", track.index = counter)
-  })
-  circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
-                        i = getI(...)
-                        xlim = CELL_META$xlim
-                        circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
-  })
-  vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
-  return(vcf_struct_gsds)
-})
-circos.clear()
-draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
-dev.off()
-
-# ============================================================================
-# Generate a bed file of wild-type and all amplicons' exon structures
-
-ref_bed <- pre.process.bed_wt(bed)
-ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
-ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
-struct_df <- do.call('rbind', struct_dfs)
-struct_df[, featureType := ifelse(grepl("UTR", featureType), "UTR", "CDS")]
-struct_df_max_length <- struct_df[, max(end)]
-new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
-ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
-all_df <- rbind(ref_bed_df, struct_df)
-fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
-# ============================================================================
-# Trouble-shooting
-## Modified circos plot 
-
-# ============================================================================
-# Generate Circos plot
-num_sectors <- ref_bed_dt[, uniqueN(feature)]
-
-col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
-
-lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
-lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
-lgd_list_vertical = packLegend(lgd_muts, lgd_reads)
+lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(lwd = 5), title_position = "topleft", title = "Longest ORF")
+lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
 fileName <- paste0(file_name, "_circos_plot.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
@@ -394,12 +322,12 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
 }, track.height = 0.05, bg.border = NA)
 
 circos.genomicTrack(combined_coverage_dt, numeric.column = 4, ylim = range(combined_coverage_dt$read_depth, na.rm = TRUE), track.height = 0.075, panel.fun = function(region, value, ...) {
-    print(CELL_META$sector.index)
-    flush.console()
-    circos.genomicLines(region, value, col = "blue", lwd = 1, ...)
-    if (CELL_META$sector.index == "5'" & CELL_META$track.index == 2) {
-      circos.yaxis(at = range(combined_coverage_dt$read_depth), labels = format(range(combined_coverage_dt$read_depth), scientific = TRUE, digits = 2), labels.cex = 0.5)
-    }
+  print(CELL_META$sector.index)
+  flush.console()
+  circos.genomicLines(region, value, col = "blue", lwd = 1, ...)
+  if (CELL_META$sector.index == "5'" & CELL_META$track.index == 2) {
+    circos.yaxis(at = range(combined_coverage_dt$read_depth), labels = format(range(combined_coverage_dt$read_depth), scientific = TRUE, digits = 2), labels.cex = 0.5)
+  }
 } )
 counter <- 2
 cluster_counter <- 0
@@ -425,13 +353,14 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
   circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
     i = getI(...)
     xlim = CELL_META$xlim
-    circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "black", track.index = counter, ...)
+    circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
   })
   # adding predicted longest orf
   circos.genomicTrack(orf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
     i = getI(...)
     xlim = CELL_META$xlim
-    circos.rect(region$start, 0.35, region$end, 0.65, col = add.alpha("green", 0.75), border = NA, track.index = counter)
+    #circos.arrow(CELL_META$xlim[1], CELL_META$xlim[2], arrow.head.width = CELL_META$yrange*0.8, arrow.head.length = cm_x(0.5), col = add.alpha("green", 0.5))
+    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("black", 0.5), border = NA, track.index = counter)
   })
   vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
   return(vcf_struct_gsds)
@@ -440,3 +369,18 @@ circos.clear()
 draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
 dev.off()
 
+# ============================================================================
+# Generate a bed file of wild-type and all amplicons' exon structures
+
+ref_bed <- pre.process.bed_wt(bed)
+ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
+ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
+struct_df <- do.call('rbind', struct_dfs)
+struct_df[, featureType := ifelse(grepl("UTR", featureType), "UTR", "CDS")]
+struct_df_max_length <- struct_df[, max(end)]
+new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
+ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
+all_df <- rbind(ref_bed_df, struct_df)
+fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
+# ============================================================================
+# Trouble-shooting
