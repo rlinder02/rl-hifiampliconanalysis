@@ -310,7 +310,7 @@ lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
 fileName <- paste0(file_name, "_circos_plot.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
-circos.par("track.height" = 0.05, track.margin = c(0.01, 0.01), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 15), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE)
+circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 15), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE)
 circos.genomicInitialize(ref_bed_dt, plotType = NULL)
 # outermost track of wild-type exon structure
 circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
