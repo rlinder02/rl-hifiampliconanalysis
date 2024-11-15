@@ -300,6 +300,7 @@ combined_coverage_dt <- coverage_dt[, .(read_depth = sum(total_reads)), by = c("
 # ============================================================================
 # Generate Circos plot
 
+num_sectors <- ref_bed_dt[, uniqueN(feature)]
 col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
