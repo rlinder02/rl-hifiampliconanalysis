@@ -217,7 +217,7 @@ base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 gene_name <- strsplit(file_name, "_")[[1]][3]
 # ============================================================================
 # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
-orig_orf_dfs <- lapply(orf_list$V1, function(orf) {
+orf_dfs <- lapply(orf_list$V1, function(orf) {
   orf_df <- pre.process.orf(orf, ref_bed_dt)
   orf_df
 })
@@ -258,7 +258,7 @@ common_values <- find_common_values(identical_struct_groups, identical_mut_group
 if(length(common_values) > 0) {
   unique_mut_dfs <- vcf_muts_values[-c(unique(unlist(common_values)))]
   unique_struct_dfs <- vcf_structs_depth[-c(unique(unlist(common_values)))]
-  unique_orf_dfs <- orig_orf_dfs[-c(unique(unlist(common_values)))]
+  unique_orf_dfs <- orf_dfs[-c(unique(unlist(common_values)))]
   # Merge identical mutation data frames such that the value column is the average of all identical value columns
   new_mut_dfs <- lapply(common_values, function(idx) {
     all_values <- do.call('rbind', vcf_muts_values[c(idx)])
@@ -273,7 +273,7 @@ if(length(common_values) > 0) {
     combined_depth
   })
   new_orf_dfs <- lapply(common_values, function(idx) {
-    all_values <- do.call('rbind', orig_orf_dfs[c(idx)])
+    all_values <- do.call('rbind', orf_dfs[c(idx)])
     combined_strand <- all_values[, .(strand = unique(strand)), by = .(feature, start, end)]
     setcolorder(combined_strand, c("feature", "start", "end", "strand"))
     combined_strand
