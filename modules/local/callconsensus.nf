@@ -86,7 +86,7 @@ process CALLCONSENSUS {
             consensus \\
             -a '*' \\
             --mark-del '-' \\
-            -i 'QUAL >= 20 & INFO/DP >= 5 & AD[:1]/DP>=0.8' \\
+            -i 'QUAL >= 20 & INFO/DP >= 5' \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             -H I \\
