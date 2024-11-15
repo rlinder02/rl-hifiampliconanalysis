@@ -30,10 +30,10 @@ orfs <- args[6]
 # For trouble-shooting locally
 
 # vcfs <- "vcf_fofn.txt"
-# bed <- "hSmarca5_cDNA_full.bed"
-# bounds <- "hSmarca5_cDNA.txt"
-# total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
-# file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
+# bed <- "hMAPT_cDNA_full.bed"
+# bounds <- "hMAPT_cDNA.txt"
+# total_reads <- "HU_PCR_MAPT_AMPLICON_FTLD_CBD_POSITIVE_total_aligned_reads.txt"
+# file_name <- "HU_PCR_MAPT_AMPLICON_FTLD_CBD_POSITIVE"
 # orfs <- "orf_fofn.txt"
 
 # ============================================================================
@@ -49,7 +49,7 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
+# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-15_mapt")
 
 
 # ============================================================================
@@ -324,8 +324,6 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
 }, track.height = 0.05, bg.border = NA)
 
 circos.genomicTrack(combined_coverage_dt, numeric.column = 4, ylim = range(combined_coverage_dt$read_depth, na.rm = TRUE), track.height = 0.075, panel.fun = function(region, value, ...) {
-  print(CELL_META$sector.index)
-  flush.console()
   circos.genomicLines(region, value, col = "blue", lwd = 1, ...)
   if (CELL_META$sector.index == first_sector & CELL_META$track.index == 2) {
     circos.yaxis(at = range(combined_coverage_dt$read_depth), labels = format(range(combined_coverage_dt$read_depth), scientific = TRUE, digits = 2), labels.cex = 0.5)
@@ -344,8 +342,6 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
   orf_struct_df <- orf_df[, ..struct_cols]
   vcf_track_col <- vcf_max_depth/total_reads_num
   counter <<- counter + 1
-  print(counter)
-  flush.console()
   cluster_counter <<- cluster_counter + 1
   circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
     i = getI(...)
