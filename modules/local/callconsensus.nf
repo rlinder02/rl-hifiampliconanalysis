@@ -27,7 +27,7 @@ process CALLCONSENSUS {
     """
     file_name=\$(basename $bam .bam)
     cluster_id=\${file_name##*_}
-
+    echo \$cluster_id > cluster_id
     samtools \\
         view \\
         $bam \\
