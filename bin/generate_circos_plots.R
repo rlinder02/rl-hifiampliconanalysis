@@ -49,11 +49,12 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-15_mapt")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-15_mapt")
 
 
 # ============================================================================
 # Custom functions
+
 pre.process.bed <- function(bed_file, bounds_file) {
   ref_bounds_dt <- fread(bounds_file)
   ref_bed_dt <- fread(bed_file)
@@ -83,7 +84,6 @@ pre.process.bed <- function(bed_file, bounds_file) {
   }
   ref_bed_dt$end[end_row] <- ref_bounds_dt$V1[2]
   ref_bed_dt <- ref_bed_dt[start_row:end_row]
-  ref_bed_dt
 }
 
 pre.process.bed_wt <- function(bed_file) {
@@ -106,13 +106,24 @@ pre.process.bed_wt <- function(bed_file) {
 
 pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt <- fread(vcf_file)
+  vcf_dt[, depth := as.numeric(str_match(vcf_dt$INFO, 'DP=(\\d+)')[,2])]
+  # subset for regions with coverage - remove sites with 0 coverage 
+  vcf_dt <- vcf_dt[depth > 0]
   vcf_max_depth <- max(as.numeric(str_match(vcf_dt$INFO, 'DP=(\\d+)')[,2]), na.rm = TRUE)
   names(vcf_dt)[10] <- "SAMPLE"
   # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt <- vcf_dt[!is.na(feature)]
-  vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  # add a new column that delineates covered sites
+  vcf_dt[, diffs := diff(c(min(POS)-1, POS))]
+  rles <- rle(vcf_dt$diffs)
+  rles$values <- 1:length(rles$values)
+  rles$values[rles$lengths == 1] <- rles$values[rles$lengths == 1] + 1 
+  vcf_dt[, runs := rep(rles$values, rles$lengths)]
+  vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
+  # ends block of code delineating covered sites
+  #vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
   struct_columns <- c("feature", "start", "end")
   vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
   vcf_dt_structure[, maxDepth := vcf_max_depth]
@@ -278,7 +289,7 @@ if(length(common_values) > 0) {
     setcolorder(combined_strand, c("feature", "start", "end", "strand"))
     combined_strand
   })
-  # if there are identical data frames, then overwrite the list of data frames stored in vcf_muts_values and vcf_structs_depth
+  # if there are identical data frames, then overwrite the list of data frames stored in vcf_muts_values, vcf_structs_depth, and orf_dfs
   vcf_muts_values <- append(new_mut_dfs, unique_mut_dfs)
   vcf_structs_depth <- append(new_struct_dfs, unique_struct_dfs)
   orf_dfs <- append(new_orf_dfs, unique_orf_dfs)
@@ -306,7 +317,9 @@ col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
 lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
-lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(lwd = 5), title_position = "topleft", title = "Longest ORF")
+lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "purple"), title_position = "topleft", title = "Longest ORF")
+
+#lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(col = "purple", lwd = 1, ), title_position = "topleft", title = "Longest ORF")
 lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
 fileName <- paste0(file_name, "_circos_plot.png")
@@ -358,7 +371,8 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
     i = getI(...)
     xlim = CELL_META$xlim
     #circos.arrow(CELL_META$xlim[1], CELL_META$xlim[2], arrow.head.width = CELL_META$yrange*0.8, arrow.head.length = cm_x(0.5), col = add.alpha("green", 0.5))
-    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("black", 0.4), border = NA, track.index = counter)
+    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("purple", 0.5), border = NA, density = 30, angle = 45, track.index = counter)
+    #circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
   })
   vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
   return(vcf_struct_gsds)
