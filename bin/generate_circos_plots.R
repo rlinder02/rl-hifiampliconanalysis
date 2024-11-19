@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "hSmarca5_cDNA_full.bed"
-bounds <- "hSmarca5_cDNA.txt"
-total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
-file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hSmarca5_cDNA_full.bed"
+# bounds <- "hSmarca5_cDNA.txt"
+# total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
+# file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
+# orfs <- "orf_fofn.txt"
 
 # ============================================================================
 # Load packages and sourced files
@@ -49,7 +49,7 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
 
 
 # ============================================================================
@@ -374,7 +374,7 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
     i = getI(...)
     xlim = CELL_META$xlim
     #circos.arrow(CELL_META$xlim[1], CELL_META$xlim[2], arrow.head.width = CELL_META$yrange*0.8, arrow.head.length = cm_x(0.5), col = add.alpha("green", 0.5))
-    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, density = 35, angle = 45, track.index = counter)
+    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, lwd = 1.5, density = 45, angle = 45, track.index = counter)
     #circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
   })
   vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
