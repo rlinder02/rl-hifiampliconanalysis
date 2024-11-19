@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-# vcfs <- "vcf_fofn.txt"
-# bed <- "hMAPT_cDNA_full.bed"
-# bounds <- "hMAPT_cDNA.txt"
-# total_reads <- "HU_PCR_MAPT_AMPLICON_FTLD_CBD_POSITIVE_total_aligned_reads.txt"
-# file_name <- "HU_PCR_MAPT_AMPLICON_FTLD_CBD_POSITIVE"
-# orfs <- "orf_fofn.txt"
+vcfs <- "vcf_fofn.txt"
+bed <- "hSmarca5_cDNA_full.bed"
+bounds <- "hSmarca5_cDNA.txt"
+total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
+file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
+orfs <- "orf_fofn.txt"
 
 # ============================================================================
 # Load packages and sourced files
@@ -49,7 +49,7 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-15_mapt")
+setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
 
 
 # ============================================================================
@@ -115,6 +115,8 @@ pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt <- vcf_dt[!is.na(feature)]
+  # eliminate duplicate rows as, for some reason, indels cause the position to be duplicated (likey has to do with the ref allele being called differently in the indel TCC vs just T, for instance)
+  vcf_dt <- vcf_dt[!duplicated(POS, fromLast=TRUE)]
   # add a new column that delineates covered sites
   vcf_dt[, diffs := diff(c(min(POS)-1, POS))]
   rles <- rle(vcf_dt$diffs)
@@ -137,6 +139,7 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt <- vcf_dt[!is.na(feature)]
+  vcf_dt <- vcf_dt[!duplicated(POS, fromLast=TRUE)]
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
   vcf_dt[, total_reads := as.numeric(str_match(INFO, 'DP=(\\d+)')[,2])]
   # keep only positions with called mutations 
@@ -228,33 +231,33 @@ base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 gene_name <- strsplit(file_name, "_")[[1]][3]
 # ============================================================================
 # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
-orf_dfs <- lapply(orf_list$V1, function(orf) {
+orf_dfs <- lapply(sort(orf_list$V1), function(orf) {
   orf_df <- pre.process.orf(orf, ref_bed_dt)
   orf_df
 })
 
-vcf_structs <- lapply(vcf_list$V1, function(vcf) {
+vcf_structs <- lapply(sort(vcf_list$V1), function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
   struct_columns <- c("feature", "start", "end")
   vcf_struct_df <- vcf_struct_df[, ..struct_columns]
   vcf_struct_df
 } ) 
 
-vcf_muts <- lapply(vcf_list$V1, function(vcf) {
+vcf_muts <- lapply(sort(vcf_list$V1), function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   muts_columns <- c("feature", "start", "end", "symbol", "REF", "ALT")
   vcf_muts_df <- vcf_muts_df[, ..muts_columns]
   vcf_muts_df 
 } )
 
-vcf_muts_values <- lapply(vcf_list$V1, function(vcf) {
+vcf_muts_values <- lapply(sort(vcf_list$V1), function(vcf) {
   vcf_muts_df <- pre.process.vcf.mutations(vcf, ref_bed_dt)
   muts_columns <- c("feature", "start", "end", "value", "symbol", "REF", "ALT")
   vcf_muts_df <- vcf_muts_df[, ..muts_columns]
   vcf_muts_df 
 } )
 
-vcf_structs_depth <- lapply(vcf_list$V1, function(vcf) {
+vcf_structs_depth <- lapply(sort(vcf_list$V1), function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
   struct_columns <- c("feature", "start", "end", "maxDepth")
   vcf_struct_df <- vcf_struct_df[, ..struct_columns]
@@ -296,7 +299,7 @@ if(length(common_values) > 0) {
 }
 
 # Calculate coverage across all aligned sites 
-coverage_dt <- do.call('rbind', lapply(vcf_list$V1, function(vcf) {
+coverage_dt <- do.call('rbind', lapply(sort(vcf_list$V1), function(vcf) {
   vcf_dt <- fread(vcf)
   vcf_dt[, start_pos := POS - 1 ]
   vcf_dt[, end_pos := start_pos + 1]
@@ -317,7 +320,7 @@ col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 
 lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
 lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
-lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "purple"), title_position = "topleft", title = "Longest ORF")
+lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest ORF")
 
 #lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(col = "purple", lwd = 1, ), title_position = "topleft", title = "Longest ORF")
 lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
@@ -371,7 +374,7 @@ struct_dfs <- lapply(1:length(vcf_structs_depth), function(idx) {
     i = getI(...)
     xlim = CELL_META$xlim
     #circos.arrow(CELL_META$xlim[1], CELL_META$xlim[2], arrow.head.width = CELL_META$yrange*0.8, arrow.head.length = cm_x(0.5), col = add.alpha("green", 0.5))
-    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("purple", 0.5), border = NA, density = 30, angle = 45, track.index = counter)
+    circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, density = 35, angle = 45, track.index = counter)
     #circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
   })
   vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
