@@ -13,21 +13,38 @@
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
                 "meta": ["id"]
             },
-            "fastq_1": {
+            "fastq": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "errorMessage": "FastQ file for HiFi reads must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
             },
-            "fastq_2": {
+            "fasta": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S+\\.f(ast)?a$",
+                "errorMessage": "Fasta file for reference fasta cannot contain spaces and must have extension '.fasta' or '.fa'"
+            },
+            "primer1": {
+                "type": "string",
+                "pattern": "^[ACTGactg]+$",
+                "errorMessage": "Nucleotide sequence of the forward primer- can be any combination of capitalized or lowercase letters, degenerate sequences are not currently supported"
+            },
+            "primer2": {
+                "type": "string",
+                "pattern": "^[ACTGactg]+$",
+                "errorMessage": "Nucleotide sequence of the reverse primer- can be any combination of capitalized or lowercase letters, degenerate sequences are not currently supported"
+            },
+            "bed": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.bed$",
+                "errorMessage": "Bed file of exon coordinates"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "fastq", "fasta", "primer1", "primer2"]
     }
 }
