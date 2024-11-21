@@ -1,5 +1,5 @@
-[![GitHub Actions CI Status](https://github.com/rl/hifiampliconanalysis/actions/workflows/ci.yml/badge.svg)](https://github.com/rlinder02/rl-hifiampliconanalysis/actions/workflows/ci.yml)
-[![GitHub Actions Linting Status](https://github.com/rl/hifiampliconanalysis/actions/workflows/linting.yml/badge.svg)](https://github.com/rlinder02/rl-hifiampliconanalysis/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![GitHub Actions CI Status](https://github.com/rlinder02/rl-hifiampliconanalysis/actions/workflows/ci.yml/badge.svg)](https://github.com/rlinder02/rl-hifiampliconanalysis/actions/workflows/ci.yml)
+[![GitHub Actions Linting Status](https://github.com/rlinder02/rl-hifiampliconanalysis/actions/workflows/linting.yml/badge.svg)](https://github.com/rlinder02/rl-hifiampliconanalysis/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
 [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
 
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.04.0-23aa62.svg)](https://www.nextflow.io/)
@@ -26,7 +26,7 @@
 10. Call variants ([`bcftools`](https://samtools.github.io/bcftools/bcftools.html))
 11. Call consensus sequences ([`bcftools`](https://samtools.github.io/bcftools/bcftools.html))
 12. Find the longest ORF ([`orfipy`](https://github.com/urmi-21/orfipy))
-13. Plot amplicon species (['circlize'](https://jokergoo.github.io/circlize_book/book/))
+13. Plot amplicon species ([`circlize`](https://jokergoo.github.io/circlize_book/book/))
 14. Plot gene structure of each species ([`gsds`](https://gsds.gao-lab.org/index.php))
 
 ## Usage
@@ -72,6 +72,8 @@ If you would like to contribute to this pipeline, please see the [contributing g
 ## Citations
 
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
+
+>Bo Hu, Jinpu Jin, An-Yuan Guo, He Zhang, Jingchu Luo and Ge Gao. **GSDS 2.0: an upgraded gene feature visualization server**. *Bioinformatics* 2015, 31(8):1296-1297. DOI: https://doi.org/10.1093/bioinformatics/btu817.
 
 This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 
