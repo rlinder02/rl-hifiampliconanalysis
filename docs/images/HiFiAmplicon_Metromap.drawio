@@ -175,8 +175,8 @@
         <mxCell id="v0_ueVVMDbjKfursdaX1-76" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;rounded=1;rotation=0;strokeWidth=5;fillColor=#999999;" vertex="1" parent="1">
           <mxGeometry x="-440.19" y="275.9590476190476" width="32.38095238095238" height="32.38095238095238" as="geometry" />
         </mxCell>
-        <mxCell id="v0_ueVVMDbjKfursdaX1-96" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;Primer filter&lt;/b&gt;&lt;/span&gt;&lt;div&gt;&lt;font color=&quot;#5c45b0&quot;&gt;&lt;span style=&quot;font-size: 15px;&quot;&gt;&lt;b&gt;Python (Bio)&lt;/b&gt;&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="-485" y="740" width="120" height="50" as="geometry" />
+        <mxCell id="v0_ueVVMDbjKfursdaX1-96" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;Primer filter&lt;/b&gt;&lt;/span&gt;&lt;div&gt;&lt;font color=&quot;#5c45b0&quot;&gt;&lt;span style=&quot;font-size: 15px;&quot;&gt;&lt;b&gt;Python (Biopython)&lt;/b&gt;&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="-505" y="740" width="160" height="50" as="geometry" />
         </mxCell>
         <mxCell id="v0_ueVVMDbjKfursdaX1-97" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;rounded=1;rotation=0;strokeWidth=5;" vertex="1" parent="1">
           <mxGeometry x="-213" y="704.1890476190476" width="32.38095238095238" height="32.38095238095238" as="geometry" />
