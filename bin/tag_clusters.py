@@ -21,7 +21,7 @@ def add_tag(bam, file_name):
     with pysam.AlignmentFile(bam, "rb") as bamfile:
         with pysam.AlignmentFile(f"{file_name}_modified.bam", "wb", template=bamfile) as out_file:
             for read in bamfile.fetch():
-                cluster_id = read.query_name.split('_')[3]
+                cluster_id = read.query_name.split('_')[-1]
                 read.set_tag("CL", cluster_id, "Z")
                 out_file.write(read)
             
