@@ -41,8 +41,8 @@ clusterize_recurse <- function(dna, cutoff, threads) {
   cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
     rownames(c1)[c1$cluster==clust]
   })
-  # cap at 10 clusters per amplicon sequenced by recursively calling the Clusterize function
-  if(length(cluster_list) > 10 & cutoff <= 0.9) {
+  # cap at 5 clusters per amplicon sequenced by recursively calling the Clusterize function
+  if(length(cluster_list) > 5 & cutoff <= 0.9) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
     print(length(cluster_list))
