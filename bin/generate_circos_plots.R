@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-# vcfs <- "vcf_fofn.txt"
-# bed <- "hSmarca5_cDNA_full.bed"
-# bounds <- "hSmarca5_cDNA.txt"
-# total_reads <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL_total_aligned_reads.txt"
-# file_name <- "HU_PCR_SMARCA5_AMPLICON_HPCPS_CTL"
-# orfs <- "orf_fofn.txt"
+vcfs <- "vcf_fofn.txt"
+bed <- "hTARDBP_cDNA_full.bed"
+bounds <- "hTARDBP_cDNA.txt"
+total_reads <- "OS03-01_FTLD_CBD_total_aligned_reads.txt"
+file_name <- "OS03-01_FTLD_CBD"
+orfs <- "orf_fofn.txt"
 
 # ============================================================================
 # Load packages and sourced files
@@ -49,7 +49,8 @@ library(gridBase)
 
 options(digits = 10)
 projectDir <- getwd()
-#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Pipelines/HiFi_PCR_analysis/tests/circos_plot_sandbox/2024-11-14")
+
+setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-11-25_run")
 
 
 # ============================================================================
@@ -115,7 +116,7 @@ pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
   vcf_dt <- vcf_dt[!is.na(feature)]
-  # eliminate duplicate rows as, for some reason, indels cause the position to be duplicated (likey has to do with the ref allele being called differently in the indel TCC vs just T, for instance)
+  # eliminate duplicate rows as, for some reason, indels cause the position to be duplicated (likely has to do with the ref allele being called differently in the indel TCC vs just T, for instance)
   vcf_dt <- vcf_dt[!duplicated(POS, fromLast=TRUE)]
   # add a new column that delineates covered sites
   vcf_dt[, diffs := diff(c(min(POS)-1, POS))]
@@ -155,20 +156,39 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   vcf_dt_muts_dt
 }
 
-pre.process.orf <- function(orf_file, ref_bed_dt) {
+pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
+  vcf_dt <- fread(vcf_file)
+  vcf_dt[, depth := as.numeric(str_match(vcf_dt$INFO, 'DP=(\\d+)')[,2])]
+  # subset for regions with coverage - remove sites with 0 coverage 
+  vcf_dt <- vcf_dt[depth > 0]
+  # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
+  vcf_dt[, POS := POS - 1 ]
+  vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
+  vcf_dt <- vcf_dt[!is.na(feature)]
+  # eliminate duplicate rows as, for some reason, indels cause the position to be duplicated (likely has to do with the ref allele being called differently in the indel TCC vs just T, for instance)
+  vcf_dt <- vcf_dt[!duplicated(POS, fromLast=TRUE)]
+  # add a new column that delineates covered sites
+  vcf_dt[, diffs := diff(c(min(POS)-1, POS))]
+  rles <- rle(vcf_dt$diffs)
+  rles$values <- 1:length(rles$values)
+  rles$values[rles$lengths == 1] <- rles$values[rles$lengths == 1] + 1 
+  vcf_dt[, runs := rep(rles$values, rles$lengths)]
+  vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
+  struct_columns <- c("feature", "start", "end", "runs")
+  vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
+  
   orf_dt <- fread(orf_file, header = F, sep = "\t")
   if(ref_bed_dt$end[1] - orf_dt$V2 == 0) {
     orf_dt[, c("V2", "V3") := .(V2 + 1, V3 + 1)]
   }
   expanded_dt <- data.table(POS = orf_dt$V2:orf_dt$V3, strand = orf_dt$V6)
-  expanded_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
+  expanded_dt[vcf_dt_structure, on=.(POS >= start, POS <= end), c("feature", "runs") := .(i.feature, i.runs)]
   expanded_dt <- expanded_dt[!is.na(feature)]
-  expanded_dt[, c("start", "end") := .(min(POS), max(POS)), by = feature]
+  expanded_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
   struct_columns <- c("feature", "start", "end", "strand")
   expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
   expanded_dt_struct
 }
-
 identify_identical_dfs <- function(df_list) {
   # Create a list of indices of identical data frames
   identical_groups <- list()
@@ -231,10 +251,8 @@ base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
 gene_name <- strsplit(file_name, "_")[[1]][3]
 # ============================================================================
 # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
-orf_dfs <- lapply(sort(orf_list$V1), function(orf) {
-  orf_df <- pre.process.orf(orf, ref_bed_dt)
-  orf_df
-})
+
+orf_dfs <- Map(pre.process.orf, sort(orf_list$V1), sort(vcf_list$V1), rep(list(ref_bed_dt), length(vcf_list$V1)))
 
 vcf_structs <- lapply(sort(vcf_list$V1), function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)
@@ -325,7 +343,7 @@ lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(co
 #lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(col = "purple", lwd = 1, ), title_position = "topleft", title = "Longest ORF")
 lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
-fileName <- paste0(file_name, "_circos_plot.png")
+fileName <- paste0(file_name, "_circos_plot_v2.png")
 png(fileName, height = 12, width = 8, units = "in", res = 1200)
 circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 15), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE)
 circos.genomicInitialize(ref_bed_dt, plotType = NULL)
