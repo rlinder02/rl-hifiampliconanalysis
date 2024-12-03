@@ -36,6 +36,7 @@ total_reads <- "OS03-01_FTLD_CBD_total_aligned_reads.txt"
 file_name <- "OS03-01_FTLD_CBD"
 orfs <- "orf_fofn.txt"
 
+
 # ============================================================================
 # Load packages and sourced files
 library(circlize)
@@ -243,13 +244,16 @@ add.alpha <- function(col, alpha=1){
 
 vcf_list <- fread(vcfs, header = F)
 orf_list <- fread(orfs, header = F)
-total_reads_dt <- fread(total_reads)
-total_reads_num <- as.numeric(total_reads_dt$V1[1])
+total_reads_list <- fread(total_reads, header = F)
+#total_reads_num <- as.numeric(total_reads_dt$V1[1])
 # ============================================================================
 # Preprocess bed file
 ref_bed_dt <- pre.process.bed(bed, bounds)
-base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
-gene_name <- strsplit(file_name, "_")[[1]][3]
+
+## assign names in loop below as go through each sample 
+# base_name <- paste(strsplit(file_name, "_")[[1]][c(3,4)], collapse = "_")
+# gene_name <- strsplit(file_name, "_")[[1]]
+# gene_name <- gene_name[length(gene_name)]
 # ============================================================================
 # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
 
@@ -287,6 +291,18 @@ identical_mut_groups <- identify_identical_dfs(vcf_muts)
 identical_struct_groups <- identify_identical_dfs(vcf_structs)
 # Find the intersection of data frames that are identical between both the structural and mutation data frames, outputting a list
 common_values <- find_common_values(identical_struct_groups, identical_mut_groups)
+
+### Here, insert a snippet to deconvolute where the common values come from 
+
+basenames <- lapply(sort(vcf_list$V1), function(vcf) {
+  split_name <- strplit(vcf, "_cluster")[[1]]
+  base_name <- paste(split_name, collapsed = "_")
+  base_name 
+} )
+
+
+
+
 # Find the unique data frames that are not duplicated
 if(length(common_values) > 0) {
   unique_mut_dfs <- vcf_muts_values[-c(unique(unlist(common_values)))]
