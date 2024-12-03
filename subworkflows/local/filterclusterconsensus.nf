@@ -75,7 +75,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
                                     meta = meta.id.split('_').last()
                                     def key = meta
-                                    return tuple(key, bed) }.groupTuple().map {group -> 
+                                    return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
     
