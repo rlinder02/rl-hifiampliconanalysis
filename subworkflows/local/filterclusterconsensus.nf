@@ -76,8 +76,8 @@ workflow FILTERCLUSTERCONSENSUS {
     
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
-    ch_vcfs_bed_bounds.view()
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
+    ch_vcfs_bed_bounds_reads.view()
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds, by:0)
     // ch_vcfs_bed_bounds_reads_orfs.view()
     CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
