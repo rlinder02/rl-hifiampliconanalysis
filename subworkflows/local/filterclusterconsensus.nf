@@ -73,6 +73,9 @@ workflow FILTERCLUSTERCONSENSUS {
                                     meta = meta.id.split('_').last()
                                     [meta, txt]
                                           }
+    ch_total_reads.view()
+    ch_bounds.view()
+    
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
