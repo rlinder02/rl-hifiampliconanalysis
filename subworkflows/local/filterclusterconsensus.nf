@@ -22,7 +22,7 @@ workflow FILTERCLUSTERCONSENSUS {
                                                                             meta = meta.id.split('_').last()
                                                                             def key = meta
                                                                             return tuple(key, bed) }.groupTuple() 
-                                                                            }
+                                                                            
     ch_versions = Channel.empty()
 
     ch_fasta_primer1 = ch_aligned_fasta.combine(ch_primer1, by:0)
