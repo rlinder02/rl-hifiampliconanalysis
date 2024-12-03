@@ -70,8 +70,8 @@ workflow FILTERCLUSTERCONSENSUS {
                     return tuple(key, file) }.groupTuple()
     ch_total_reads = SPLITBAM.out.txt.map { meta, txt -> 
                                     meta = meta.id.split('_').last()
-                                    [meta, txt]
-                                          }
+                                    def key = meta
+                                    return tuple(key, txt) }.groupTuple()
     ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
                                     meta = meta.id.split('_').last()
                                     def key = meta
@@ -81,9 +81,8 @@ workflow FILTERCLUSTERCONSENSUS {
     
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
-    ch_vcfs_bed_bounds.view()
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
-    //ch_vcfs_bed_bounds_reads.view()
+    ch_vcfs_bed_bounds_reads.view()
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds, by:0)
     // ch_vcfs_bed_bounds_reads_orfs.view()
     CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
