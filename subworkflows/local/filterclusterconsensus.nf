@@ -21,7 +21,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> 
                                                                             meta = meta.id.split('_').last()
                                                                             def key = meta
-                                                                            return tuple(key, bed) }.groupTuple() 
+                                                                            return tuple(key, bed) }.groupTuple().first() 
                                                                             
     ch_versions = Channel.empty()
 
