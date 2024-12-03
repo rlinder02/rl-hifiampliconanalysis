@@ -189,6 +189,7 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
   expanded_dt_struct
 }
+
 identify_identical_dfs <- function(df_list) {
   # Create a list of indices of identical data frames
   identical_groups <- list()

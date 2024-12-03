@@ -19,7 +19,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_primer2 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer2] }
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> 
-                                                                            meta = meta.id
+                                                                            meta = meta.id.split('_').last()
                                                                             [meta, bed] 
                                                                             }
     ch_versions = Channel.empty()
@@ -58,18 +58,19 @@ workflow FILTERCLUSTERCONSENSUS {
     // ch_fastas = CALLCONSENSUS.out.con_fasta.map { file -> 
     //                 def key = file.name.toString().split('/').last().split('_clu').first()
     //                 return tuple(key, file) }.groupTuple()
+    // combine all samples that queried the same gene so can compare across samples
     ch_orf_beds = CALLCONSENSUS.out.orf_bed.map { file -> 
-                    def key = file.name.toString().split('/').last().split('_clu').first()
+                    def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
-                    def key = file.name.toString().split('/').last().split('_clu').first()
+                    def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
     ch_total_reads = SPLITBAM.out.txt.map { meta, txt -> 
-                                    meta = meta.id
+                                    meta = meta.id.split('_').last()
                                     [meta, txt]
                                           }
     ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
-                                    meta = meta.id
+                                    meta = meta.id.split('_').last()
                                     [meta, txt]
                                           }
     ch_vcfs_bed = ch_vcfs.combine(ch_bed, by:0)
@@ -79,6 +80,8 @@ workflow FILTERCLUSTERCONSENSUS {
     
     CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
     ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
+
+    // create a module to combine tables of amplicon structure and mutations from the CIRCOS module across samples from the same gene to find the same species across samples 
 
     emit:
     fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
