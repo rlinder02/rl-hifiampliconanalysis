@@ -80,7 +80,7 @@ process CALLCONSENSUS {
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
-    if [[ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 || \$(cat $ref | grep -v '>' | tr -d '\\n' | wc -m) -eq \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0') ]]
+    if [[ \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 || \$(cat $ref | grep -v '>' | tr -d '\\n' | wc -m) -ne \$(zcat ${prefix}_\${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0') ]]
     then
         bcftools \\
             consensus \\
@@ -97,8 +97,13 @@ process CALLCONSENSUS {
             --longest \\
             --outdir orfipy \\
             --procs $task.cpus
-    else 
-        rm -f ${prefix}_\${cluster_id}_modified.vcf.gz
+    else
+        orfipy \\
+            $ref \\
+            --bed ${prefix}_\${cluster_id}.bed \\
+            --longest \\
+            --outdir orfipy \\
+            --procs $task.cpus
     fi
 
     cat <<-END_VERSIONS > versions.yml

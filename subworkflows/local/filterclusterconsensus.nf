@@ -83,7 +83,6 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds, by:0)
-    ch_vcfs_bed_bounds_reads_orfs.view()
     CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
     ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
 
