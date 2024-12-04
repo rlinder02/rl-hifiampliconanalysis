@@ -13,7 +13,7 @@ process CIRCOS {
 
     output:
     tuple val(meta), path("*.png"), emit: png
-    tuple val(meta), path("*.bed"), emit: struct_bed
+    tuple val(meta), path("*.bed"), emit: struct_bed, optional: true
     path "versions.yml"           , emit: versions
 
     when:

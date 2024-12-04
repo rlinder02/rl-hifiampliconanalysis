@@ -23,7 +23,7 @@ vcfs <- args[1]
 bed <- args[2]
 bounds <- args[3]
 total_reads <- args[4]
-file_name <- args[5]
+gene_name <- args[5]
 orfs <- args[6]
 
 # ============================================================================
