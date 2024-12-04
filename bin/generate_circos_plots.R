@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "hTARDBP_cDNA_full.bed"
-bounds <- "hTARDBP_cDNA.txt"
-total_reads <- "total_reads_fofn.txt"
-gene_name <- "TARDBP"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hTARDBP_cDNA_full.bed"
+# bounds <- "hTARDBP_cDNA.txt"
+# total_reads <- "total_reads_fofn.txt"
+# gene_name <- "TARDBP"
+# orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
 
 
 # ============================================================================
@@ -281,6 +281,12 @@ ref_bed_dt <- pre.process.bed(bed, bounds)
 # gene_name <- gene_name[length(gene_name)]
 # ============================================================================
 # Combine consensus sequences if they end up having the same structure and mutation profile after filtering in the callconsensus module
+total_reads_dfs <- lapply(sort(total_reads_list$V1), function(depth) {
+  reads <- fread(depth, header = F)
+  reads[, sample := gsub("_total.*", "", depth)]
+  reads
+})
+total_reads_dfs <- do.call('rbind', total_reads_dfs)
 
 orf_dfs <- Map(pre.process.orf, sort(orf_list$V1), sort(vcf_list$V1), rep(list(ref_bed_dt), length(vcf_list$V1)))
 
@@ -360,13 +366,16 @@ if(length(common_values) > 0) {
         }
     } ) 
   }
-} )
+ } )
 
-if(length(remove_idces) > 0) {
-  vcf_muts <- vcf_muts[-remove_idces]
-  vcf_structs <- vcf_structs[-remove_idces]
-  orf_dfs <- orf_dfs[-remove_idces]
-}
+  if(length(remove_idces) > 0) {
+    vcf_muts <- vcf_muts[-remove_idces]
+    vcf_structs <- vcf_structs[-remove_idces]
+    orf_dfs <- orf_dfs[-remove_idces]
+  }
+
+}  
+
 vcf_muts <- do.call('rbind', vcf_muts)
 vcf_structs <- do.call('rbind', vcf_structs)
 orf_dfs <- do.call('rbind', orf_dfs)
@@ -387,14 +396,18 @@ lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 # loop through all samples to create one circos plot per sample that will be combined into a single plot 
 
 sample_loop <- lapply(unique(id_dt$sample), function(samp) {
+  print(samp)
+  flush.console()
   coverage_dt <- sample_coverage_dt[sample == samp]
   vcf_struct_dt <- vcf_structs[sample == samp]
   genc_id_dt <- id_dt[sample == samp]
   vcf_mut_dt <- vcf_muts[sample == samp]
   orf_dt <- orf_dfs[sample == samp]
+  total_reads_dt <- total_reads_dfs[sample == samp]
+  total_reads_num <- total_reads_dt$V1
   fileName <- paste0(samp, "_circos_plot.png")
   png(fileName, height = 12, width = 8, units = "in", res = 1200)
-  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 15), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE)
+  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE)
   circos.genomicInitialize(ref_bed_dt, plotType = NULL)
   # outermost track of wild-type exon structure
   circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
@@ -413,11 +426,11 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
     }
   } )
   counter <- 2
-  cluster_counter <- 0
-  genc_dfs <- lapply(unique(genc_id_dt$genc_id)), function(genc) {
-    vcf_struct_df <- vcf_structs_depth[[idx]]
-    vcf_muts_df <- vcf_muts_values[[idx]]
-    orf_df <- orf_dfs[[idx]]
+  genc_dfs <- lapply(unique(genc_id_dt$genc_id), function(genc) {
+    genc_dt <- genc_id_dt[genc_id == genc]
+    vcf_struct_df <- vcf_struct_dt[cluster %in% unique(genc_dt$cluster_id)]
+    vcf_muts_df <- vcf_mut_dt[cluster %in% unique(genc_dt$cluster_id)]
+    orf_df <- orf_dt[cluster %in% unique(genc_dt$cluster_id)]
     vcf_max_depth <- vcf_struct_df$maxDepth[1]
     # remove the depth column from vcf_struct_df
     struct_cols <- c("feature", "start", "end")
@@ -425,11 +438,15 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
     orf_struct_df <- orf_df[, ..struct_cols]
     vcf_track_col <- vcf_max_depth/total_reads_num
     counter <<- counter + 1
-    cluster_counter <<- cluster_counter + 1
+    print(counter)
+    flush.console()
     circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
       i = getI(...)
       xlim = CELL_META$xlim
       circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.4), border = "black", track.index = counter)
+      if (CELL_META$sector.index == first_sector) {
+        circos.yaxis(at = 0.5, labels = genc, labels.cex = 0.5, track.index = counter)
+      }
     })
     circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
       i = getI(...)
@@ -444,25 +461,27 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
       circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, lwd = 1.5, density = 45, angle = 45, track.index = counter)
       #circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
     })
-    vcf_struct_gsds <- data.table(gene_id = paste0(base_name, "_", cluster_counter), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
+    vcf_struct_gsds <- data.table(gene_id = paste0(samp, "_", gsub(".*_", "", genc)), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
     return(vcf_struct_gsds)
-  })
+  } )
+  genc_dfs_combined <- do.call('rbind', genc_dfs)
   circos.clear()
   draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
   dev.off()
+  return(genc_dfs_combined)
 } )
 # ============================================================================
-# Generate a bed file of wild-type and all amplicons' exon structures
+# Generate a bed file of wild-type and all amplicons' exon structures; may want to just keep individual gencDNAs by id, then can have separate plot showing in which samples they were detected in
 
-ref_bed <- pre.process.bed_wt(bed)
-ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
-ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
-struct_df <- do.call('rbind', struct_dfs)
-struct_df[, featureType := ifelse(grepl("UTR", featureType), "UTR", "CDS")]
-struct_df_max_length <- struct_df[, max(end)]
-new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
-ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
-all_df <- rbind(ref_bed_df, struct_df)
-fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
+# ref_bed <- pre.process.bed_wt(bed)
+# ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
+# ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
+# struct_df <- do.call('rbind', sample_loop)
+# struct_df[, featureType := ifelse(grepl("UTR", featureType), "UTR", "CDS")]
+# struct_df_max_length <- struct_df[, max(end)]
+# new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
+# ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
+# all_df <- rbind(ref_bed_df, struct_df)
+# fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
 # ============================================================================
 # Trouble-shooting
