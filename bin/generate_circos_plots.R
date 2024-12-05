@@ -397,8 +397,8 @@ lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(co
 lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
 # loop through all samples to create one circos plot per sample that will be combined into a single plot 
-layout(matrix(c(rep(1,15), rep(2, 11), rep(4,4), rep(3, 15)), ncol = 15, byrow = TRUE))
-layout(matrix(1:9, 3, 3))
+# layout(matrix(c(rep(1,15), rep(2, 11), rep(4,4), rep(3, 15)), ncol = 15, byrow = TRUE))
+# layout(matrix(1:9, 3, 3))
 
 # num_rows <- length(unique(id_dt$sample))
 # png(paste0(gene_name, "_circos_plot.png"), height = 12, width = 8, units = "in", res = 1200)
@@ -418,7 +418,7 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   fileName <- paste0(samp, "_circos_plot.png")
   png(fileName, height = 12, width = 8, units = "in", res = 1200)
   par(mar = c(0, 0, 0, 0))
-  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE, cell.padding = c(0, 0, 0, 0))
+  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE, cell.padding = c(0.05, 0.05, 0.05, 0.05))
   
   #title(main = samp, cex.main = 2, line = 0.5, xpd = NA)
   
