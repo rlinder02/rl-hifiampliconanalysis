@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
+# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
 
 
 # ============================================================================
@@ -264,6 +264,9 @@ add.alpha <- function(col, alpha=1){
           rgb(x[1], x[2], x[3], alpha=alpha)) 
 }   
 
+keep.unique.vals <- function(column, delimiter) {
+  sapply(strsplit(column, delimiter, fixed = TRUE), function(x) paste(unique(x), collapse = ";"))
+}
 # ============================================================================
 # Load data
 
@@ -394,6 +397,13 @@ lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(co
 lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
 # loop through all samples to create one circos plot per sample that will be combined into a single plot 
+layout(matrix(c(rep(1,15), rep(2, 11), rep(4,4), rep(3, 15)), ncol = 15, byrow = TRUE))
+layout(matrix(1:9, 3, 3))
+
+# num_rows <- length(unique(id_dt$sample))
+# png(paste0(gene_name, "_circos_plot.png"), height = 12, width = 8, units = "in", res = 1200)
+# layout(matrix(1:length(unique(id_dt$sample)), nrow = num_rows))
+#par(mar = c(1,3.5,1,0.5), mgp = c(1.5,0.7,0), oma = c(2,2.5,2,2))
 
 sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   print(samp)
@@ -407,7 +417,11 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   total_reads_num <- total_reads_dt$V1
   fileName <- paste0(samp, "_circos_plot.png")
   png(fileName, height = 12, width = 8, units = "in", res = 1200)
-  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE)
+  par(mar = c(0, 0, 0, 0))
+  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE, cell.padding = c(0, 0, 0, 0))
+  
+  #title(main = samp, cex.main = 2, line = 0.5, xpd = NA)
+  
   circos.genomicInitialize(ref_bed_dt, plotType = NULL)
   # outermost track of wild-type exon structure
   circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
@@ -461,7 +475,9 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
       circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, lwd = 1.5, density = 45, angle = 45, track.index = counter)
       #circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
     })
-    vcf_struct_gsds <- data.table(gene_id = paste0(samp, "_", gsub(".*_", "", genc)), start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
+    sample <- strsplit(samp, "_")[[1]]
+    sample <- paste(sample[1:(length(sample)-1)], collapse = "_")
+    vcf_struct_gsds <- data.table(sample = sample, genc_id = genc, struct_id = genc_dt$struct_id[1], start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
     return(vcf_struct_gsds)
   } )
   genc_dfs_combined <- do.call('rbind', genc_dfs)
@@ -470,18 +486,53 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   dev.off()
   return(genc_dfs_combined)
 } )
+#draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
+#dev.off()
+
 # ============================================================================
 # Generate a bed file of wild-type and all amplicons' exon structures; may want to just keep individual gencDNAs by id, then can have separate plot showing in which samples they were detected in
+struct_df <- do.call('rbind', sample_loop)
+repeated_features <- struct_df[, rle(featureType), by = genc_id]
+repeat_id <- unlist(sapply(repeated_features$lengths, function(x) seq(1, x)))
+struct_df[, featureType := paste0(featureType, ".", repeat_id)]
+struct_same_dt <- struct_df[, lapply(.SD, function(x) paste(unique(x), collapse = ";")), by = struct_id]
+struct_same_df <- struct_same_dt %>% separate_longer_delim(c(start, end, featureType), delim = ";")
 
-# ref_bed <- pre.process.bed_wt(bed)
-# ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
-# ref_bed_df <- data.table(gene_id = paste0(gene_name, "_wt_mRNA"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
-# struct_df <- do.call('rbind', sample_loop)
-# struct_df[, featureType := ifelse(grepl("UTR", featureType), "UTR", "CDS")]
-# struct_df_max_length <- struct_df[, max(end)]
-# new_ref_max <- struct_df_max_length + (ref_bed_max_length - struct_df_max_length)/4
-# ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
-# all_df <- rbind(ref_bed_df, struct_df)
-# fwrite(all_df, file = paste0(file_name, "_structure.bed"), sep = "\t", col.names = FALSE)
+struct_bed <- struct_same_df[, c("genc_id", "start", "end", "featureType")]
+struct_bed <- setDT(struct_bed)[, featureType := gsub("\\..*", "", featureType)]
+struct_bed[, featureType := ifelse(grepl("UTR", featureType), "UTR", paste0("CDS", featureType))]
+struct_bed[, c("start", "end") := .(as.numeric(start), as.numeric(end))]
+struct_df_max_length <- struct_bed[, max(end)]
+
+ref_bed <- pre.process.bed_wt(bed)
+ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
+ref_bed_df <- data.table(genc_id = paste0(gene_name, "_wt"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
+new_ref_max <- struct_df_max_length + round((ref_bed_max_length - struct_df_max_length)/4, 0)
+ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
+all_df <- rbind(ref_bed_df, struct_bed)
+fwrite(all_df, file = paste0(gene_name, "_structure.bed"), sep = "\t", col.names = FALSE)
+
+# ============================================================================
+# Generate an upset plot of the number of samples that share a unique genc_id
+# upset_lst <- list()
+# 
+# new_lst <- lapply(unique(struct_df$sample), function(samp) {
+#   sample_list <- c(unique(struct_df$genc_id[struct_df$sample==samp]))
+#   sample_list
+# })
+# names(new_lst) <- unique(struct_df$sample)
+# 
+# 
+# m1 = make_comb_mat(new_lst)
+# 
+# names(list) <- unique(struct_df$sample)
+# 
+# upset_df <- data.frame(matrix(ncol=length(unique(struct_df$sample)), nrow=length(unique(struct_df$genc_id))))
+# names(upset_df) <- unique(struct_df$sample)
+# rownames(upset_df) <- unique(struct_df$genc_id)
+# 
+# 
+# 
+# UpSet(m1)
 # ============================================================================
 # Trouble-shooting
