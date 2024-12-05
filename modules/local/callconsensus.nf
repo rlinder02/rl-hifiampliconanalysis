@@ -94,7 +94,6 @@ process CALLCONSENSUS {
         orfipy \\
             ${prefix}_\${cluster_id}.fasta \\
             --bed ${prefix}_\${cluster_id}.bed \\
-            --longest \\
             --outdir orfipy \\
             --procs $task.cpus
     else

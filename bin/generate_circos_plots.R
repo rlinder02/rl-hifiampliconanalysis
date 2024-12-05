@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-# vcfs <- "vcf_fofn.txt"
-# bed <- "hTARDBP_cDNA_full.bed"
-# bounds <- "hTARDBP_cDNA.txt"
-# total_reads <- "total_reads_fofn.txt"
-# gene_name <- "TARDBP"
-# orfs <- "orf_fofn.txt"
+vcfs <- "vcf_fofn.txt"
+bed <- "hTARDBP_cDNA_full.bed"
+bounds <- "hTARDBP_cDNA.txt"
+total_reads <- "total_reads_fofn.txt"
+gene_name <- "TARDBP"
+orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
+setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
 
 
 # ============================================================================
@@ -400,10 +400,10 @@ lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 # layout(matrix(c(rep(1,15), rep(2, 11), rep(4,4), rep(3, 15)), ncol = 15, byrow = TRUE))
 # layout(matrix(1:9, 3, 3))
 
-# num_rows <- length(unique(id_dt$sample))
-# png(paste0(gene_name, "_circos_plot.png"), height = 12, width = 8, units = "in", res = 1200)
-# layout(matrix(1:length(unique(id_dt$sample)), nrow = num_rows))
-#par(mar = c(1,3.5,1,0.5), mgp = c(1.5,0.7,0), oma = c(2,2.5,2,2))
+num_rows <- max(c(floor(length(unique(id_dt$sample))/2), 1))
+num_cols <- ceiling(length(unique(id_dt$sample))/num_rows)
+png(paste0(gene_name, "_circos_plot.png"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)), units = "in", res = 1200)
+par(mfrow = c(num_rows, num_cols))
 
 sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   print(samp)
@@ -415,13 +415,12 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   orf_dt <- orf_dfs[sample == samp]
   total_reads_dt <- total_reads_dfs[sample == samp]
   total_reads_num <- total_reads_dt$V1
-  fileName <- paste0(samp, "_circos_plot.png")
-  png(fileName, height = 12, width = 8, units = "in", res = 1200)
+  
+  #fileName <- paste0(samp, "_circos_plot.png")
+  #png(fileName, height = 12, width = 8, units = "in", res = 1200)
+  #par(mar = c(0, 0, 0, 0))
   par(mar = c(0, 0, 0, 0))
-  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE, cell.padding = c(0.01, 1, 0.01, 1))
-  
-  #title(main = samp, cex.main = 2, line = 0.5, xpd = NA)
-  
+  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), points.overflow.warning = FALSE, cell.padding = c(0.01, 1, 0.01, 1))
   circos.genomicInitialize(ref_bed_dt, plotType = NULL)
   # outermost track of wild-type exon structure
   circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
@@ -481,13 +480,22 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
     return(vcf_struct_gsds)
   } )
   genc_dfs_combined <- do.call('rbind', genc_dfs)
+  title(main = samp, cex.main = 1, line = -2, xpd = NA)
   circos.clear()
-  draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
-  dev.off()
+  
+  #draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
+  #dev.off()
+  
   return(genc_dfs_combined)
 } )
-#draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
-#dev.off()
+plot(1, type = "n", axes=FALSE, xlab="", ylab="", xlim = c(0,1), ylim = c(0,1))
+legend(x = 0.5, y = 1, legend = c("SNV", "INDEL"), pch = c(16,17), cex=1, horiz = TRUE, title="Mutation type", bty="n")
+legend(x = 0.5, y = 0.85, legend = c("ORF"), pch = "///////", col = "slategrey", cex=1, horiz = TRUE, title="Longest ORF", bty="n")
+
+#lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest ORF")
+
+#draw(lgd_list_vertical, x = unit(0.85, "npc"), y = unit(0.1, "npc"), just = c("right", "bottom"))
+dev.off()
 
 # ============================================================================
 # Generate a bed file of wild-type and all amplicons' exon structures; may want to just keep individual gencDNAs by id, then can have separate plot showing in which samples they were detected in
