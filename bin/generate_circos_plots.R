@@ -418,7 +418,7 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   fileName <- paste0(samp, "_circos_plot.png")
   png(fileName, height = 12, width = 8, units = "in", res = 1200)
   par(mar = c(0, 0, 0, 0))
-  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE, cell.padding = c(0.05, 0.05, 0.05, 0.05))
+  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), canvas.xlim = c(-1.5, 1.5), canvas.ylim = c(-1.5, 1.5), points.overflow.warning = FALSE, cell.padding = c(0.01, 1, 0.01, 1))
   
   #title(main = samp, cex.main = 2, line = 0.5, xpd = NA)
   
