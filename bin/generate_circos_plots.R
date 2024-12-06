@@ -490,7 +490,7 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
 } )
 plot(1, type = "n", axes=FALSE, xlab="", ylab="", xlim = c(0,1), ylim = c(0,1))
 legend(x = 0.5, y = 1, legend = c("SNV", "INDEL"), pch = c(16,17), cex=1, horiz = TRUE, title="Mutation type", bty="n")
-legend(x = 0.5, y = 0.85, legend = c("ORF"), pch = "///////", col = "slategrey", cex=1, horiz = TRUE, title="Longest ORF", bty="n")
+legend(x = 0.5, y = 0.85, legend = c("ORF"), pch = "/", col = "slategrey", cex=1, horiz = TRUE, title="Longest ORF", bty="n")
 
 #lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest ORF")
 
