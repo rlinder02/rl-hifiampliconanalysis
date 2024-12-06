@@ -14,7 +14,7 @@ workflow QCALIGN {
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_versions = Channel.empty()
-    ch_fastq = ch_fastq.filter( ~/.*q.gz/)
+    ch_fastq = ch_fastq.filter( ~/.*gz$/)
     ch_fastq.view()
 
     CONVERTTOFASTA ( ch_fastq )
