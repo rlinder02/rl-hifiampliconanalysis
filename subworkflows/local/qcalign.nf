@@ -12,7 +12,7 @@ workflow QCALIGN {
 
     main:
     ch_versions = Channel.empty()
-    
+
     CONVERTTOFASTA ( ch_fastq )
     ch_versions = ch_versions.mix(CONVERTTOFASTA.out.versions.first())
 
