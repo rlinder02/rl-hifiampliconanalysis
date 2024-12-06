@@ -16,7 +16,7 @@ workflow QCALIGN {
     ch_versions = Channel.empty()
     //ch_fastq = ch_fastq.filter( ~/.*gz$/)
     //ch_fastq.view()
-    ch_fastq.view()
+    ch_fastq[1].view()
     // if (ch_fastq.)
     CONVERTTOFASTA ( ch_fastq )
     ch_versions = ch_versions.mix(CONVERTTOFASTA.out.versions.first())
