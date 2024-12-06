@@ -30,8 +30,10 @@ workflow HIFIAMPLICONANALYSIS {
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') ? 1: 0 }
+    is_fastq.view()
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
     if (is_fastq == 1) {
+        println("FASTQ file found!")
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
     //
