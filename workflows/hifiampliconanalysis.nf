@@ -31,6 +31,7 @@ workflow HIFIAMPLICONANALYSIS {
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') ? 1: 0 }
     is_fastq.view()
+    is_fastq == 1
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
     if (is_fastq == 1) {
         println("FASTQ file found!")
