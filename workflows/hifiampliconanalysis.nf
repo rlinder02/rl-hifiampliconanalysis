@@ -45,6 +45,9 @@ workflow HIFIAMPLICONANALYSIS {
         aligned_fasta = QCALIGN.out.aligned_fasta
     
     }
+    else {
+        aligned_fasta = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
+    }
     //
     // SUBWORKFLOW: Filter for aligned reads with both primers sequences present, then cluster based on sequence similarity, then identify a single consensus sequence for each cluster 
     //
