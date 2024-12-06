@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-02_run")
+setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-06_run")
 
 
 # ============================================================================
@@ -183,18 +183,21 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   vcf_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
   struct_columns <- c("feature", "start", "end", "runs")
   vcf_dt_structure <- unique(vcf_dt[, ..struct_columns])
-  
+  cds_dt <- vcf_dt_structure[!grepl("UTR", feature)]
   orf_dt <- fread(orf_file, header = F, sep = "\t")
-  if(ref_bed_dt$end[1] - orf_dt$V2 == 0) {
-    orf_dt[, c("V2", "V3") := .(V2 + 1, V3 + 1)]
+  orf_dt_cds <- orf_dt[V2 >= cds_dt$start[1] & V3 <= cds_dt$end[nrow(cds_dt)]]
+  orf_dt_cds$length <- as.numeric(str_match(orf_dt_cds$V4, 'ORF_len=(\\d+)')[,2])
+  orf_dt_cds_longest <- orf_dt_cds[order(-length)][1]
+  if(ref_bed_dt$end[1] - orf_dt_cds_longest$V2 == 0) {
+    orf_dt_cds_longest[, c("V2", "V3") := .(V2 + 1, V3 + 1)]
   }
-  expanded_dt <- data.table(POS = orf_dt$V2:orf_dt$V3, strand = orf_dt$V6)
+  expanded_dt <- data.table(POS = orf_dt_cds_longest$V2:orf_dt_cds_longest$V3, strand = orf_dt_cds_longest$V6)
   expanded_dt[vcf_dt_structure, on=.(POS >= start, POS <= end), c("feature", "runs") := .(i.feature, i.runs)]
   expanded_dt <- expanded_dt[!is.na(feature)]
   expanded_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
   struct_columns <- c("feature", "start", "end", "strand")
   expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
-  cluster_id <- strsplit(gsub("_longest.*", "", orf_file), "_")[[1]]
+  cluster_id <- strsplit(gsub(".bed", "", orf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)]
   expanded_dt_struct[, c("sample", "cluster") := .(gsub("_cluster.*", "", orf_file), cluster_id)]
   expanded_dt_struct
@@ -389,9 +392,9 @@ num_sectors <- ref_bed_dt[, uniqueN(feature)]
 first_sector <- ref_bed_dt$feature[1]
 col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
 
-lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation type")
-lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Fraction of reads")
-lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest ORF")
+lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation\ntype", labels_gp = gpar(fontsize = 8), title_gp = gpar(fontsize = 8, fontface = "bold"))
+lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Read\nfraction", labels_gp = gpar(fontsize = 8), title_gp = gpar(fontsize = 8, fontface = "bold"))
+lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest\nORF", labels_gp = gpar(fontsize = 8), title_gp = gpar(fontsize = 8, fontface = "bold"))
 
 #lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(col = "purple", lwd = 1, ), title_position = "topleft", title = "Longest ORF")
 lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
@@ -403,8 +406,11 @@ lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 num_rows <- max(c(floor(length(unique(id_dt$sample))/2), 1))
 num_cols <- ceiling(length(unique(id_dt$sample))/num_rows)
 png(paste0(gene_name, "_circos_plot.png"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)), units = "in", res = 1200)
+#pdf(paste0(gene_name, "_circos_plot.pdf"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)))
+
 par(mfrow = c(num_rows, num_cols))
 
+plot_counter <- 0
 sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   print(samp)
   flush.console()
@@ -415,11 +421,15 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   orf_dt <- orf_dfs[sample == samp]
   total_reads_dt <- total_reads_dfs[sample == samp]
   total_reads_num <- total_reads_dt$V1
-  
+  plot_counter <<- plot_counter + 1
   #fileName <- paste0(samp, "_circos_plot.png")
   #png(fileName, height = 12, width = 8, units = "in", res = 1200)
   #par(mar = c(0, 0, 0, 0))
-  par(mar = c(0, 0, 0, 0))
+  if(plot_counter %in% seq(1, num_rows*num_cols, num_cols)) {
+    par(mar = c(0, 2, 0, 0))
+  } else {
+    par(mar = c(0, 2, 0, 0))
+  }
   circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), points.overflow.warning = FALSE, cell.padding = c(0.01, 1, 0.01, 1))
   circos.genomicInitialize(ref_bed_dt, plotType = NULL)
   # outermost track of wild-type exon structure
@@ -470,9 +480,7 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
     circos.genomicTrack(orf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
       i = getI(...)
       xlim = CELL_META$xlim
-      #circos.arrow(CELL_META$xlim[1], CELL_META$xlim[2], arrow.head.width = CELL_META$yrange*0.8, arrow.head.length = cm_x(0.5), col = add.alpha("green", 0.5))
       circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, lwd = 1.5, density = 45, angle = 45, track.index = counter)
-      #circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
     })
     sample <- strsplit(samp, "_")[[1]]
     sample <- paste(sample[1:(length(sample)-1)], collapse = "_")
@@ -488,13 +496,13 @@ sample_loop <- lapply(unique(id_dt$sample), function(samp) {
   
   return(genc_dfs_combined)
 } )
-plot(1, type = "n", axes=FALSE, xlab="", ylab="", xlim = c(0,1), ylim = c(0,1))
-legend(x = 0.5, y = 1, legend = c("SNV", "INDEL"), pch = c(16,17), cex=1, horiz = TRUE, title="Mutation type", bty="n")
-legend(x = 0.5, y = 0.85, legend = c("ORF"), pch = "/", col = "slategrey", cex=1, horiz = TRUE, title="Longest ORF", bty="n")
+# plot(1, type = "n", axes=FALSE, xlab="", ylab="", xlim = c(0,1), ylim = c(0,1))
+# legend(x = 0.5, y = 1, legend = c("SNV", "INDEL"), pch = c(16,17), cex=1, horiz = TRUE, title="Mutation type", bty="n")
+# legend(x = 0.5, y = 0.85, legend = c("ORF"), pch = "/", col = "slategrey", cex=1, horiz = TRUE, title="Longest ORF", bty="n")
 
 #lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest ORF")
 
-#draw(lgd_list_vertical, x = unit(0.85, "npc"), y = unit(0.1, "npc"), just = c("right", "bottom"))
+draw(lgd_list_vertical, x = unit(0.01, "npc"), y = unit(0.99, "npc"), just = c("left", "top")) # need to expand canvas to the left
 dev.off()
 
 # ============================================================================
