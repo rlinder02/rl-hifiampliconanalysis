@@ -29,7 +29,7 @@ workflow HIFIAMPLICONANALYSIS {
     ch_multiqc_files = Channel.empty()
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
-    is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') }
+    is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') ? [meta, file]:[''] }
     is_fastq.view()
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
     if ( is_fastq ) {
