@@ -29,12 +29,10 @@ workflow HIFIAMPLICONANALYSIS {
     ch_multiqc_files = Channel.empty()
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
-    is_fastq = ch_fastq.filter { it.endsWith('q.gz') }
-    //is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') }
-    is_fastq.view()
+    is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') }
+    is_fastq[0].view()
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
-    is_fastq
-        .ifNotEmpty {
+    if ( is_fastq ) {
         println("FASTQ file found!")
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
@@ -49,9 +47,8 @@ workflow HIFIAMPLICONANALYSIS {
         aligned_fasta = QCALIGN.out.aligned_fasta
     
     }
-        .ifEmpty {
-            println("FASTA file found!")
-            aligned_fasta = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
+    else {
+        aligned_fasta = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     }
     //
     // SUBWORKFLOW: Filter for aligned reads with both primers sequences present, then cluster based on sequence similarity, then identify a single consensus sequence for each cluster 
