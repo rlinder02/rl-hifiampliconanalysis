@@ -32,7 +32,7 @@ workflow HIFIAMPLICONANALYSIS {
     is_fastq = ch_fastq.map { meta, file -> file.toString().contains('q.gz') ? true: false }
     is_fastq.view()
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
-    if (is_fastq) {
+    if (is_fastq == "true") {
         println("FASTQ file found!")
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
