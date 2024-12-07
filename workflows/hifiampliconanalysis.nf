@@ -41,7 +41,10 @@ workflow HIFIAMPLICONANALYSIS {
                     if (fileType == "fasta") {
                         return tuple(meta, file)
                     }
-                 }.view()
+                 }
+    ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
+    ch_extra_fasta_ref.view()
+
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
     //

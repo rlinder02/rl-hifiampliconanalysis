@@ -31,6 +31,7 @@ workflow FILTERCLUSTERCONSENSUS {
                         return tuple(meta, file)
                     }
                  }
+    ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
 
     ch_versions = Channel.empty()
 
