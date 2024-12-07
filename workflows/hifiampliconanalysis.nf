@@ -30,7 +30,7 @@ workflow HIFIAMPLICONANALYSIS {
     ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
-    ch_fastq = ch_fastq.map { meta, file -> 
+    ch_fastq_only = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
                     if (fileType != "fasta") {
                         return tuple(meta, file)
@@ -45,7 +45,7 @@ workflow HIFIAMPLICONANALYSIS {
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
     //
-    QCALIGN ( ch_fastq,
+    QCALIGN ( ch_fastq_only,
                 ch_ref
             )
 
