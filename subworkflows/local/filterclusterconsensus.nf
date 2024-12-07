@@ -51,6 +51,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(CLUSTER.out.versions.first())
 
     ch_clusters_ref = CLUSTER.out.consensus_fasta.combine(ch_ref, by:0)
+    ch_clusters_ref = ch_clusters_ref.concat(ch_extra_fasta_ref)
 
     ALIGNCLUSTERS ( ch_clusters_ref )
     ch_versions = ch_versions.mix(ALIGNCLUSTERS.out.versions.first())
@@ -62,7 +63,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
     ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
-    
+    ch_bams_ref.view()
+        
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
