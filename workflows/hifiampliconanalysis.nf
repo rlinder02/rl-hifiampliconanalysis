@@ -36,7 +36,12 @@ workflow HIFIAMPLICONANALYSIS {
                         return tuple(meta, file)
                     }
                  }
-
+    ch_extra_fasta = ch_fastq.map { meta, file -> 
+                    def fileType = file.name.toString().split('/').last().split('\\.').last()
+                    if (fileType == "fasta") {
+                        return tuple(meta, file)
+                    }
+                 }.view()
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
     //
