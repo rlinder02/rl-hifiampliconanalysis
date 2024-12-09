@@ -110,17 +110,19 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
+
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
-    ch_vcfs_all.view()
-    ch_orf_beds_all = ch_orf_beds.join(ch_orf_beds_pp)
-
+    ch_orf_beds_all = ch_orf_beds.combine(ch_orf_beds_pp, by:0).map {meta, clusters, pps ->
+                                                            def files = clusters + pps
+                                                            return tuple(meta, files)}
+    
     ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
-    //ch_vcfs_bed_bounds_reads_orfs.view()
+    ch_vcfs_bed_bounds_reads_orfs.view()
 
     // CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
     // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
