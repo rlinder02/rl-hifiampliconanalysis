@@ -70,12 +70,12 @@ workflow FILTERCLUSTERCONSENSUS {
     // Need to split out the processed pseudogene bams to go into separate call consensus module, then merge for input into circos module
     ch_bams_ref_pp = ch_bams_ref.map { meta, file, ref -> 
                     def fileType = file.name.toString().split('/').last().split('\\.bam').first().split('_').last()
-                    if (fileType.contains("pp") {
+                    if (fileType.contains("pp")) {
                         return tuple(meta, file, ref)
                     } 
                  }
     ch_bams_ref_pp.view()
-    
+
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
