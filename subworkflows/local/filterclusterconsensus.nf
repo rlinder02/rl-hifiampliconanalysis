@@ -66,10 +66,10 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
     ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
-    ch_bams_ref.view()
+    //ch_bams_ref.view()
 
     // Need to split out the processed pseudogene bams to go into separate call consensus module, then merge for input into circos module
-    ch_bams_ref_pp =  
+    //ch_bams_ref_pp =  
 
 
     CALLCONSENSUS ( ch_bams_ref )
