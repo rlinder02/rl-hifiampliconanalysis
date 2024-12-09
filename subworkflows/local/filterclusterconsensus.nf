@@ -96,7 +96,7 @@ workflow FILTERCLUSTERCONSENSUS {
 
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
-                    return tuple(key, file) }.groupTuple().flatten()
+                    return tuple(key, file) }.groupTuple().flatten().collect()
 
     ch_vcfs_pp = CALLCONSENSUSPP.out.vcf.map { file -> 
                 def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
