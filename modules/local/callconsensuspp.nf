@@ -55,7 +55,15 @@ process CALLCONSENSUSPP {
         norm \\
         -f $ref \\
         --threads $task.cpus \\
+        -Ou \\
+    | \\
+    bcftools \\
+        filter \\
+        --IndelGap 5 \\
+        -i 'QUAL >= 20' \\
         -Oz \\
+        -s FAIL \\
+        --threads $task.cpus \\
         -o ${prefix}_\${cluster_id}_modified.vcf.gz
 
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
@@ -66,6 +74,7 @@ process CALLCONSENSUSPP {
             consensus \\
             -a '*' \\
             --mark-del '-' \\
+            -i 'QUAL >= 20' \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz

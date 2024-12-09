@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-06_run")
+setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-09_run")
 
 
 # ============================================================================
@@ -133,7 +133,7 @@ pre.process.vcf.structure <- function(vcf_file, ref_bed_dt) {
   vcf_dt_structure[, maxDepth := vcf_max_depth]
   cluster_id <- strsplit(gsub("_modified.*", "", vcf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)]
-  vcf_dt_structure[, c("sample", "cluster") := .(gsub("_cluster.*", "", vcf_file), cluster_id)]
+  vcf_dt_structure[, c("sample", "cluster") := .(gsub("_cluster.*|_pp.*", "", vcf_file), cluster_id)]
   vcf_dt_structure
 }
 
@@ -159,7 +159,7 @@ pre.process.vcf.mutations <- function(vcf_file, ref_bed_dt) {
   setnames(vcf_dt_muts_dt, old = c("POS", "POS_END"), new = c("start", "end"))
   cluster_id <- strsplit(gsub("_modified.*", "", vcf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)]
-  vcf_dt_muts_dt[, c("sample", "cluster") := .(gsub("_cluster.*", "", vcf_file), cluster_id)]
+  vcf_dt_muts_dt[, c("sample", "cluster") := .(gsub("_cluster.*|_pp.*", "", vcf_file), cluster_id)]
   vcf_dt_muts_dt
 }
 
@@ -199,7 +199,7 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
   cluster_id <- strsplit(gsub(".bed", "", orf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)]
-  expanded_dt_struct[, c("sample", "cluster") := .(gsub("_cluster.*", "", orf_file), cluster_id)]
+  expanded_dt_struct[, c("sample", "cluster") := .(gsub("_cluster.*|_pp.*", "", orf_file), cluster_id)]
   expanded_dt_struct
 }
 
@@ -214,7 +214,7 @@ sample.coverage.calc <- function(vcf_file, ref_bed_dt) {
   vcf_dt <- vcf_dt[, ..columns]
   cluster_id <- strsplit(gsub("_modified.*", "", vcf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)]
-  vcf_dt[, c("sample", "cluster") := .(gsub("_cluster.*", "", vcf_file), cluster_id)]
+  vcf_dt[, c("sample", "cluster") := .(gsub("_cluster.*|_pp.*", "", vcf_file), cluster_id)]
   vcf_dt
 }
 
@@ -322,7 +322,7 @@ common_values <- find.common.values(identical_struct_groups, identical_mut_group
 
 # make an initial dataframe of sample/cluster names and corresponding genc ID ann row index
 base_names <- gsub(".vcf.gz", "", sort(vcf_list$V1))
-sample_names <- gsub("_cluster.*", "", sort(vcf_list$V1))
+sample_names <- gsub("_cluster.*|_pp.*", "", sort(vcf_list$V1))
 cluster_id <- unlist(lapply(gsub("_modified.*", "", sort(vcf_list$V1)), function(clust) {
   splitting <- strsplit(clust, "_")[[1]]
   splitting[length(splitting)]
