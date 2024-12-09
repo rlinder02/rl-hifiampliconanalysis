@@ -27,12 +27,12 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     ch_extra_fasta = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
-                    if (fileType == "fasta") {
+                    if (fileType == "fast5") {
                         return tuple(meta, file)
-                    }
+                    } 
                  }
-    ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
-
+    
+    ch_extra_fasta.view()
     ch_versions = Channel.empty()
 
     ch_fasta_primer1 = ch_aligned_fasta.combine(ch_primer1, by:0)
@@ -51,6 +51,9 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(CLUSTER.out.versions.first())
 
     ch_clusters_ref = CLUSTER.out.consensus_fasta.combine(ch_ref, by:0)
+    // Here combine the custom user added fasta file (of known preprocessed pseudogenes in some cases) with the other samples if it exixts
+
+    ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
     ch_clusters_ref = ch_clusters_ref.concat(ch_extra_fasta_ref)
 
     ALIGNCLUSTERS ( ch_clusters_ref )
@@ -64,13 +67,14 @@ workflow FILTERCLUSTERCONSENSUS {
 
     ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
     ch_bams_ref.view()
-        
+
+    // Need to split out the processed pseudogene bams to go into separate call consensus module, then merge for input into circos module
+    ch_bams_ref_pp =  
+
+
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
-    // ch_fastas = CALLCONSENSUS.out.con_fasta.map { file -> 
-    //                 def key = file.name.toString().split('/').last().split('_clu').first()
-    //                 return tuple(key, file) }.groupTuple()
     // combine all samples that queried the same gene so can compare across samples
     ch_orf_beds = CALLCONSENSUS.out.orf_bed.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()

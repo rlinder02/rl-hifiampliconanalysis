@@ -100,7 +100,6 @@ process CALLCONSENSUS {
         orfipy \\
             $ref \\
             --bed ${prefix}_\${cluster_id}.bed \\
-            --longest \\
             --outdir orfipy \\
             --procs $task.cpus
     fi
