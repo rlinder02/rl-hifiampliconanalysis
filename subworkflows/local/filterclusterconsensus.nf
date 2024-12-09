@@ -88,19 +88,18 @@ workflow FILTERCLUSTERCONSENSUS {
     // combine all samples that queried the same gene so can compare across samples
     ch_orf_beds = CALLCONSENSUS.out.orf_bed.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
-                    return tuple(key, file) }.groupTuple().flatten().collect()
+                    return tuple(key, file) }.groupTuple()
 
     ch_orf_beds_pp = CALLCONSENSUSPP.out.orf_bed.map { file -> 
                     def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
-                    return tuple(key, file) }.groupTuple().flatten().collect()
-
+                    return tuple(key, file) }.groupTuple()
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
-                    return tuple(key, file) }.groupTuple().flatten().collect()
+                    return tuple(key, file) }.groupTuple()
 
     ch_vcfs_pp = CALLCONSENSUSPP.out.vcf.map { file -> 
                 def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
-                return tuple(key, file) }.groupTuple().flatten().collect()
+                return tuple(key, file) }.groupTuple()
     ch_total_reads = SPLITBAM.out.txt.map { meta, txt -> 
                                     meta = meta.id.split('_').last()
                                     def key = meta
@@ -111,14 +110,15 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
-    ch_vcfs_all = ch_vcfs.join(ch_vcfs_pp)
+    ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).transpose()
+    ch_vcfs_all.view()
     ch_orf_beds_all = ch_orf_beds.join(ch_orf_beds_pp)
 
     ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
-    ch_vcfs_bed_bounds_reads_orfs.view()
+    //ch_vcfs_bed_bounds_reads_orfs.view()
 
     // CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
     // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
