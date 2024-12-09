@@ -74,7 +74,13 @@ workflow FILTERCLUSTERCONSENSUS {
                         return tuple(meta, file, ref)
                     } 
                  }
-    ch_bams_ref_pp.view()
+     ch_bams_ref = ch_bams_ref.map { meta, file, ref -> 
+                    def fileType = file.name.toString().split('/').last().split('\\.bam').first().split('_').last()
+                    if (!fileType.contains("pp")) {
+                        return tuple(meta, file, ref)
+                    } 
+                 }
+    ch_bams_ref.view()
 
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
