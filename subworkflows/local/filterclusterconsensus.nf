@@ -32,7 +32,6 @@ workflow FILTERCLUSTERCONSENSUS {
                     } 
                  }
     ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
-    ch_extra_fasta_ref.view()
 
     ch_versions = Channel.empty()
 
@@ -55,7 +54,6 @@ workflow FILTERCLUSTERCONSENSUS {
     // Here combine the custom user added fasta file (of known preprocessed pseudogenes in some cases) with the other samples if it exixts
 
     ch_clusters_ref = ch_clusters_ref.concat(ch_extra_fasta_ref)
-    ch_clusters_ref.view()
 
     ALIGNCLUSTERS ( ch_clusters_ref )
     ch_versions = ch_versions.mix(ALIGNCLUSTERS.out.versions.first())
@@ -67,10 +65,10 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
     ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
-    //ch_bams_ref.view()
+    ch_bams_ref.view()
 
     // Need to split out the processed pseudogene bams to go into separate call consensus module, then merge for input into circos module
-    //ch_bams_ref_pp =  
+    //ch_bams_ref_pp =  ch_bams_ref.filter { it[1].co }
 
 
     CALLCONSENSUS ( ch_bams_ref )
