@@ -112,7 +112,7 @@ workflow FILTERCLUSTERCONSENSUS {
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
     ch_vcfs_all = ch_vcfs.join(ch_vcfs_pp)
-    ch_vcfs_all.view()
+    ch_vcfs.view()
     ch_orf_beds_all = ch_orf_beds.combine(ch_orf_beds_pp, by:0)
 
     ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
