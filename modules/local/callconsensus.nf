@@ -69,14 +69,14 @@ process CALLCONSENSUS {
     bcftools +setGT \\
         ${prefix}_\${cluster_id}.vcf.gz -- \\
         -t q \\
-        -i 'AD[:1]/DP>=0.8' \\
+        -i 'AD[:1]/DP>=0.8 & QUAL >= 20 & INFO/DP >= 5' \\
         -n 'c:1/1' \\
     | \\
     bcftools +setGT \\
         -o ${prefix}_\${cluster_id}_modified.vcf.gz \\
         -- \\
         -t q \\
-        -i 'AD[:1]/DP<0.8' \\
+        -i 'AD[:1]/DP<0.8 & QUAL >= 20 & INFO/DP >= 5' \\
         -n 'c:0/1'
     tabix -p vcf ${prefix}_\${cluster_id}_modified.vcf.gz
     
