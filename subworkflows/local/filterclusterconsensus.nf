@@ -27,14 +27,14 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     ch_extra_fasta = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
-                    if (fileType == "fasta") {
+                    if (fileType == "fast5") {
                         return tuple(meta, file)
                     } 
                  }
     
     ch_extra_fasta.view()
     if(ch_extra_fasta) {
-        println("Fasta here!")
+        println("Fast5 here!")
     }
     ch_versions = Channel.empty()
 
