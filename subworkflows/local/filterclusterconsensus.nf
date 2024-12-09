@@ -5,6 +5,7 @@ include { ALIGNCLUSTERS    } from '../../modules/local/alignclusters'
 include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
+include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
 include { CIRCOS           } from '../../modules/local/circos'
 
 workflow FILTERCLUSTERCONSENSUS {
@@ -65,9 +66,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(SPLITBAM.out.versions.first())
 
     ch_bams_ref = SPLITBAM.out.bams.combine(ch_ref, by:0).transpose()
-    //ch_bams_ref.view()
-
-    // Need to split out the processed pseudogene bams to go into separate call consensus module, then merge for input into circos module
+    // Need to split out the processed pseudogene bams to go into separate call consensus modules, then merge for input into circos module
     ch_bams_ref_pp = ch_bams_ref.map { meta, file, ref -> 
                     def fileType = file.name.toString().split('/').last().split('\\.bam').first().split('_').last()
                     if (fileType.contains("pp")) {
@@ -80,11 +79,14 @@ workflow FILTERCLUSTERCONSENSUS {
                         return tuple(meta, file, ref)
                     } 
                  }
-    ch_bams_ref.view()
-
     CALLCONSENSUS ( ch_bams_ref )
     ch_versions = ch_versions.mix(CALLCONSENSUS.out.versions.first())
 
+    CALLCONSENSUSPP ( ch_bams_ref_pp )
+    ch_versions = ch_versions.mix(CALLCONSENSUSPP.out.versions.first())
+
+    CALLCONSENSUSPP.out.vcf.view()
+    CALLCONSENSUSPP.out.orf_bed.view()
     // combine all samples that queried the same gene so can compare across samples
     ch_orf_beds = CALLCONSENSUS.out.orf_bed.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
