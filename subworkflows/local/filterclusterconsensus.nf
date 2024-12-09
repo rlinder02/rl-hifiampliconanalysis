@@ -111,7 +111,7 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
-    ch_vcfs_all = ch_vcfs.mix(ch_vcfs_pp).groupTuple()
+    ch_vcfs_all = ch_vcfs.join(ch_vcfs_pp)
     ch_vcfs_all.view()
     ch_orf_beds_all = ch_orf_beds.combine(ch_orf_beds_pp, by:0)
 
