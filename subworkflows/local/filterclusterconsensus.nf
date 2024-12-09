@@ -29,11 +29,13 @@ workflow FILTERCLUSTERCONSENSUS {
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
                     if (fileType == "fast5") {
                         return tuple(meta, file)
-                    } 
+                    } else {
+                        return tuple(meta, "empty")
+                    }
                  }
     
     ch_extra_fasta.view()
-    if(ch_extra_fasta) {
+    if(ch_extra_fasta.map { it[1].contains("empty")}) {
         println("Fast5 here!")
     }
     ch_versions = Channel.empty()
