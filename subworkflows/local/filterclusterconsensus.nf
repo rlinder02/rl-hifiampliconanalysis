@@ -27,17 +27,13 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
     ch_extra_fasta = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
-                    if (fileType == "fast5") {
+                    if (fileType == "fasta") {
                         return tuple(meta, file)
-                    } else {
-                        return tuple(meta, "empty")
-                    }
+                    } 
                  }
-    
-    ch_extra_fasta.view()
-    if(ch_extra_fasta.map { !it[1].contains("empty")}) {
-        println("Fasta here!")
-    }
+    ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
+    ch_extra_fasta_ref.view()
+
     ch_versions = Channel.empty()
 
     ch_fasta_primer1 = ch_aligned_fasta.combine(ch_primer1, by:0)
@@ -58,8 +54,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_clusters_ref = CLUSTER.out.consensus_fasta.combine(ch_ref, by:0)
     // Here combine the custom user added fasta file (of known preprocessed pseudogenes in some cases) with the other samples if it exixts
 
-    ch_extra_fasta_ref = ch_extra_fasta.combine(ch_ref, by:0)
     ch_clusters_ref = ch_clusters_ref.concat(ch_extra_fasta_ref)
+    ch_clusters_ref.view()
 
     ALIGNCLUSTERS ( ch_clusters_ref )
     ch_versions = ch_versions.mix(ALIGNCLUSTERS.out.versions.first())
