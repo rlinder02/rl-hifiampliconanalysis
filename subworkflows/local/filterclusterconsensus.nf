@@ -35,7 +35,7 @@ workflow FILTERCLUSTERCONSENSUS {
                  }
     
     ch_extra_fasta.view()
-    if(~ch_extra_fasta.map { it[1].contains("empty")}) {
+    if(ch_extra_fasta.map { !it[1].contains("empty")}) {
         println("Fasta here!")
     }
     ch_versions = Channel.empty()
