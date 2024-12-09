@@ -68,7 +68,7 @@ workflow FILTERCLUSTERCONSENSUS {
     //ch_bams_ref.view()
 
     // Need to split out the processed pseudogene bams to go into separate call consensus module, then merge for input into circos module
-    ch_bams_ref_pp =  ch_bams_ref.filter { meta -> meta.id.contains("pseudogenes") }
+    ch_bams_ref_pp =  ch_bams_ref.filter { tuple -> tuple[0] }
     ch_bams_ref_pp.view()
 
 
