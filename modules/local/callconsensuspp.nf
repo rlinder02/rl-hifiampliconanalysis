@@ -72,7 +72,6 @@ process CALLCONSENSUSPP {
     then
         bcftools \\
             consensus \\
-            -a '' \\
             --mark-del '-' \\
             -i 'QUAL >= 20' \\
             -o ${prefix}_\${cluster_id}.fasta \\
