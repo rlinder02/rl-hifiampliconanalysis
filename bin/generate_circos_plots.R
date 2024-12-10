@@ -67,7 +67,7 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt[, V3 := V3 - coord_shift]
   ref_bed_dt[, V4 := V3 - V2]
   ref_bed_dt[, V5 := cumsum(V4)]
-  ref_bed_dt[, start := c(0, V5[-length(V5)]+1)]
+  ref_bed_dt[, start := c(0, V5[-length(V5)])]
   ref_bed_dt[, end := V5]
   ref_bed_dt[, feature := gsub("CDS_", "", V1)]
   columns <- c("feature", "start", "end")
