@@ -90,10 +90,6 @@ process CALLCONSENSUSPP {
             --outdir orfipy \\
             --procs $task.cpus
 
-        bcftools \\
-            consensus \\
-            -c ${prefix}_\${cluster_id}.chain \\
-
     else
         orfipy \\
             $ref \\
