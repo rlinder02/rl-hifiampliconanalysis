@@ -74,7 +74,7 @@ process CALLCONSENSUSPP {
     then
         bcftools \\
             consensus \\
-            -a '' \\
+            -a ' ' \\
             -i 'QUAL >= 20' \\
             -m ${prefix}_\${cluster_id}.mask \\
             -c ${prefix}_\${cluster_id}.chain \\
