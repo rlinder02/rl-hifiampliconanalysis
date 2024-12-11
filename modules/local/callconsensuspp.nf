@@ -7,7 +7,8 @@ process CALLCONSENSUSPP {
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2':
         'community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2' }"
-
+    containerOptions = "--user root"
+    
     input:
     tuple val(meta), path(bam), path(ref)
 
