@@ -76,7 +76,7 @@ process CALLCONSENSUSPP {
             consensus \\
             -a '*' \\
             --mark-del '-' \\
-            -i 'QUAL >= 20' \\
+            -i 'QUAL >= 20 & INFO/DP >= 5' \\
             -c ${prefix}_\${cluster_id}.chain \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
@@ -89,6 +89,11 @@ process CALLCONSENSUSPP {
             --bed ${prefix}_\${cluster_id}.bed \\
             --outdir orfipy \\
             --procs $task.cpus
+
+        bcftools \\
+            consensus \\
+            -c ${prefix}_\${cluster_id}.chain \\
+
     else
         orfipy \\
             $ref \\
