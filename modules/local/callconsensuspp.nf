@@ -5,19 +5,20 @@ process CALLCONSENSUSPP {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2':
-        'community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2' }"
+        'oras://community.wave.seqera.io/library/bcftools_crossmap_minimap2_orfipy_pruned:a10b34d7e4795d31':
+        'community.wave.seqera.io/library/bcftools_crossmap_minimap2_orfipy_pruned:a10b34d7e4795d31' }"
     containerOptions = "--user root"
 
     input:
     tuple val(meta), path(bam), path(ref)
 
     output:
-    path("*modified.vcf.gz")                                     , emit: vcf       , optional: true
-    path("*.fasta")                                              , emit: con_fasta , optional: true
-    path("orfipy/*.bed")                                         , emit: orf_bed   , optional: true
-    tuple val(meta), path("*.txt")                               , emit: txt       , optional: true
-    path("*chain")                                               , emit: chain     , optional: true
+    path("*modified.vcf.gz")                                     , emit: vcf        , optional: true
+    path("*.fasta")                                              , emit: con_fasta  , optional: true
+    path("orfipy/*.bed")                                         , emit: orf_bed    , optional: true
+    path("*.bed")                                                , emit: lifted_bed , optional: true
+    tuple val(meta), path("*.txt")                               , emit: txt        , optional: true
+    path("*chain")                                               , emit: chain      , optional: true
     path "versions.yml"                                          , emit: versions
 
     when:
@@ -74,9 +75,8 @@ process CALLCONSENSUSPP {
     then
         bcftools \\
             consensus \\
-            -a ' ' \\
+            -a '*' \\
             -i 'QUAL >= 20' \\
-            -c ${prefix}_\${cluster_id}.chain \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
@@ -88,6 +88,23 @@ process CALLCONSENSUSPP {
             --bed ${prefix}_\${cluster_id}.bed \\
             --outdir orfipy \\
             --procs $task.cpus
+
+        minimap2 \\
+            -cx asm5 \\
+            --cs \\
+            ${prefix}_\${cluster_id}_modified.fasta \\
+            $ref \\
+            -o ${prefix}_\${cluster_id}_modified.paf
+        
+        transanno minimap2-to-chain \\
+            ${prefix}_\${cluster_id}_modified.paf \\
+            --output ${prefix}_\${cluster_id}_modified.chain
+
+        CrossMap \\
+            bed \\
+            ${prefix}_\${cluster_id}_modified.chain \\
+            orfipy/${prefix}_\${cluster_id}.bed \\
+            ${prefix}_\${cluster_id}_lifted.bed
 
     else
         orfipy \\
