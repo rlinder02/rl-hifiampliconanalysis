@@ -75,6 +75,7 @@ process CALLCONSENSUSPP {
             -a '*' \\
             --mark-del '-' \\
             -i 'QUAL >= 20' \\
+            --chain \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
