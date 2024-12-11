@@ -8,7 +8,7 @@ process CALLCONSENSUSPP {
         'oras://community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2':
         'community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2' }"
     containerOptions = "--user root"
-    
+
     input:
     tuple val(meta), path(bam), path(ref)
 
@@ -17,6 +17,7 @@ process CALLCONSENSUSPP {
     path("*.fasta")                                              , emit: con_fasta , optional: true
     path("orfipy/*.bed")                                         , emit: orf_bed   , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt       , optional: true
+    path("*chain")                                               , emit: chain     , optional: true
     path "versions.yml"                                          , emit: versions
 
     when:
@@ -76,7 +77,7 @@ process CALLCONSENSUSPP {
             -a '*' \\
             --mark-del '-' \\
             -i 'QUAL >= 20' \\
-            -c /${prefix}.chain \\
+            -c ${prefix}_\${cluster_id}.chain \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
