@@ -405,7 +405,7 @@ lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
 
 num_rows <- max(c(floor(length(unique(id_dt$sample))/2), 1))
 num_cols <- ceiling(length(unique(id_dt$sample))/num_rows)
-png(paste0(gene_name, "_circos_plot.png"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)), units = "in", res = 1200)
+png(paste0(gene_name, "_circos_plot_v2.png"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)), units = "in", res = 1200)
 #pdf(paste0(gene_name, "_circos_plot.pdf"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)))
 
 par(mfrow = c(num_rows, num_cols))

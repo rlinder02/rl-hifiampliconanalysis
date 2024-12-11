@@ -72,13 +72,17 @@ process CALLCONSENSUSPP {
     then
         bcftools \\
             consensus \\
+            -a '*' \\
             --mark-del '-' \\
             -i 'QUAL >= 20' \\
-            -o ${prefix}_\${cluster_id}_no_fill.fasta \\
+            -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
+        
+        cat ${prefix}_\${cluster_id}.fasta | tr -d '*' | tr -d '-' | tr -d '\n' | sed 's/_cDNA/_cDNA\n'/g > ${prefix}_\${cluster_id}_modified.fasta
+
         orfipy \\
-            ${prefix}_\${cluster_id}_no_fill.fasta \\
+            ${prefix}_\${cluster_id}_modified.fasta \\
             --bed ${prefix}_\${cluster_id}.bed \\
             --outdir orfipy \\
             --procs $task.cpus
