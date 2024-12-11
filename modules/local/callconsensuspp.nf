@@ -76,7 +76,6 @@ process CALLCONSENSUSPP {
             consensus \\
             -a ' ' \\
             -i 'QUAL >= 20' \\
-            -m ${prefix}_\${cluster_id}.mask \\
             -c ${prefix}_\${cluster_id}.chain \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
