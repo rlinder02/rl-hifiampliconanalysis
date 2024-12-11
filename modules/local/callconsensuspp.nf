@@ -100,10 +100,11 @@ process CALLCONSENSUSPP {
             ${prefix}_\${cluster_id}_modified.paf \\
             --output ${prefix}_\${cluster_id}_modified.chain
 
-        transanno liftbed \\
-            --chain ${prefix}_\${cluster_id}_modified.chain \\
-            --output ${prefix}_\${cluster_id}_lifted.bed \\
-            orfipy/${prefix}_\${cluster_id}.bed
+        CrossMap \\
+            bed \\
+            ${prefix}_\${cluster_id}_modified.chain \\
+            orfipy/${prefix}_\${cluster_id}.bed \\
+            ${prefix}_\${cluster_id}_lifted.bed
 
     else
         orfipy \\
