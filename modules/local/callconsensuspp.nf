@@ -19,7 +19,7 @@ process CALLCONSENSUSPP {
     path("*.bed")                                                , emit: lifted_bed , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt        , optional: true
     path("*chain")                                               , emit: chain      , optional: true
-    path("*.paf")                                                , emit: paf        , optional: true
+    path("*.sam")                                                , emit: paf        , optional: true
     path "versions.yml"                                          , emit: versions
 
     when:
@@ -91,22 +91,12 @@ process CALLCONSENSUSPP {
             --procs $task.cpus
 
         minimap2 \\
-            -cx asm5 \\
+            -a \\
             --cs \\
             ${prefix}_\${cluster_id}_modified.fasta \\
             $ref \\
-            -o ${prefix}_\${cluster_id}_modified.paf
+            -o ${prefix}_\${cluster_id}_modified.sam
         
-        transanno minimap2chain \\
-            ${prefix}_\${cluster_id}_modified.paf \\
-            --output ${prefix}_\${cluster_id}_modified.chain
-
-        CrossMap \\
-            bed \\
-            ${prefix}_\${cluster_id}_modified.chain \\
-            orfipy/${prefix}_\${cluster_id}.bed \\
-            ${prefix}_\${cluster_id}_lifted.bed
-
     else
         orfipy \\
             $ref \\
