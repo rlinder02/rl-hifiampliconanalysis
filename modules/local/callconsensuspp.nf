@@ -91,11 +91,11 @@ process CALLCONSENSUSPP {
             --procs $task.cpus
 
         minimap2 \\
-            -cx -asm20 \\
+            -cx asm20 \\
             --cs \\
             ${prefix}_\${cluster_id}_modified.fasta \\
             ${prefix}_\${cluster_id}.fasta \\
-            -o ${prefix}_\${cluster_id}_modified.sam
+            -o ${prefix}_\${cluster_id}_modified.paf
         
     else
         orfipy \\
