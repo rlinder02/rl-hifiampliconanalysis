@@ -16,7 +16,7 @@ process CALLCONSENSUSPP {
     path("*modified.vcf.gz")                                     , emit: vcf        , optional: true
     path("*.fasta")                                              , emit: con_fasta  , optional: true
     path("orfipy/*.bed")                                         , emit: orf_bed    , optional: true
-    path("*.bed")                                                , emit: lifted_bed , optional: true
+    path("*transanno.bed")                                       , emit: orf_bed    , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt        , optional: true
     path("*chain")                                               , emit: chain      , optional: true
     path("*.paf")                                                , emit: paf        , optional: true
@@ -112,6 +112,10 @@ process CALLCONSENSUSPP {
             --chain ${prefix}_\${cluster_id}_modified.chain \\
             --output ${prefix}_\${cluster_id}_lifted_transanno.bed \\
             orfipy/${prefix}_\${cluster_id}.bed
+        
+        cd orfipy
+        rm -f *.bed
+
     else
         orfipy \\
             $ref \\
