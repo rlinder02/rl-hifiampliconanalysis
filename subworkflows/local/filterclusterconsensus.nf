@@ -90,13 +90,16 @@ workflow FILTERCLUSTERCONSENSUS {
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
 
-    ch_orf_beds_pp = CALLCONSENSUSPP.out.orf_bed_tr.map { file -> 
+    ch_orf_beds_pp_not_ref = CALLCONSENSUSPP.out.orf_bed_tr.map { file -> 
                     def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
     
     ch_orf_beds_pp_ref = CALLCONSENSUSPP.out.orf_bed.map { file -> 
                     def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
+
+    ch_orf_beds_pp = ch_orf_beds_pp_not_ref.combine(ch_orf_beds_pp_ref, by:0)
+    ch_orf_beds_pp.view()
 
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
@@ -105,6 +108,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_pp = CALLCONSENSUSPP.out.vcf.map { file -> 
                 def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
                 return tuple(key, file) }.groupTuple()
+
     ch_total_reads = SPLITBAM.out.txt.map { meta, txt -> 
                                     meta = meta.id.split('_').last()
                                     def key = meta
