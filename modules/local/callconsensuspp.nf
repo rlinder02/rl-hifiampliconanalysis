@@ -110,7 +110,7 @@ process CALLCONSENSUSPP {
 
         transanno liftbed \\
             --chain ${prefix}_\${cluster_id}_modified.chain \\
-            --output ${prefix}_\${cluster_id}_lifted.bed \\
+            --output ${prefix}_\${cluster_id}_lifted_transanno.bed \\
             orfipy/${prefix}_\${cluster_id}.bed
     else
         orfipy \\
