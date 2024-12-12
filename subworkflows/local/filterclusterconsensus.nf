@@ -99,6 +99,7 @@ workflow FILTERCLUSTERCONSENSUS {
                     return tuple(key, file) }.groupTuple()
 
     ch_orf_beds_pp = ch_orf_beds_pp_not_ref.combine(ch_orf_beds_pp_ref, by:0)
+    ch_orf_beds_pp_not_ref.view()
     ch_orf_beds_pp.view()
 
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
@@ -132,8 +133,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
 
-    CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
-    ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
+    // CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
+    // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
 
     // create a module to combine tables of amplicon structure and mutations from the CIRCOS module across samples from the same gene to find the same species across samples 
 
