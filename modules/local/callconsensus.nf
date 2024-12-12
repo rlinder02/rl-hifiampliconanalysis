@@ -8,7 +8,7 @@ process CALLCONSENSUS {
         'oras://community.wave.seqera.io/library/bcftools_crossmap_minimap2_orfipy_pruned:a10b34d7e4795d31':
         'community.wave.seqera.io/library/bcftools_crossmap_minimap2_orfipy_pruned:a10b34d7e4795d31' }"
     containerOptions = "--user root"
-    
+
     input:
     tuple val(meta), path(bam), path(ref)
 
@@ -95,7 +95,7 @@ process CALLCONSENSUS {
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
         
-        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' > ${prefix}_\${cluster_id}_modified.fasta
+        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' | sed 's/>.*/>${prefix}_\${cluster_id}/' > ${prefix}_\${cluster_id}_modified.fasta
         
         orfipy \\
             ${prefix}_\${cluster_id}_modified.fasta \\
