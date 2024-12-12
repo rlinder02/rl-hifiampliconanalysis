@@ -90,11 +90,18 @@ process CALLCONSENSUSPP {
             --outdir orfipy \\
             --procs $task.cpus
 
+        bcftools \\
+            consensus \\
+            -i 'QUAL >= 20' \\
+            -o ${prefix}_\${cluster_id}_no_fill.fasta \\
+            -f $ref \\
+            ${prefix}_\${cluster_id}_modified.vcf.gz
+        
         minimap2 \\
             -cx asm20 \\
             --cs \\
             ${prefix}_\${cluster_id}_modified.fasta \\
-            ${prefix}_\${cluster_id}.fasta \\
+            ${prefix}_\${cluster_id}_no_fill.fasta \\
             -o ${prefix}_\${cluster_id}_modified.paf
         
     else
