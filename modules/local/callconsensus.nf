@@ -118,10 +118,6 @@ process CALLCONSENSUS {
             --chain ${prefix}_${cluster_id}_modified.chain \\
             --output ${prefix}_${cluster_id}_lifted_transanno.bed \\
             orfipy/${prefix}_${cluster_id}.bed
-        
-        cd orfipy
-        rm -f *.bed
-        cd ..
     
     else
         orfipy \\
