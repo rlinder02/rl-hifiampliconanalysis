@@ -28,7 +28,7 @@ process CALLCONSENSUSPP {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def cluster_id = bam.name.toString().split('/').last().split('_').last()
+    def cluster_id = bam.name.toString().split('/').last().split('_').last().split('.').first()
     """
     file_name=\$(basename $bam .bam)
     echo $cluster_id
