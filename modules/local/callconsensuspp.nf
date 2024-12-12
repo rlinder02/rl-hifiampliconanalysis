@@ -19,7 +19,7 @@ process CALLCONSENSUSPP {
     path("*.bed")                                                , emit: lifted_bed , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt        , optional: true
     path("*chain")                                               , emit: chain      , optional: true
-    path("*.sam")                                                , emit: paf        , optional: true
+    path("*.paf")                                                , emit: paf        , optional: true
     path "versions.yml"                                          , emit: versions
 
     when:
