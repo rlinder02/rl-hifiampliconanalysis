@@ -103,7 +103,16 @@ process CALLCONSENSUSPP {
             ${prefix}_\${cluster_id}_modified.fasta \\
             ${prefix}_\${cluster_id}_no_fill.fasta \\
             -o ${prefix}_\${cluster_id}_modified.paf
-        
+
+        transanno minimap2chain \\
+            ${prefix}_\${cluster_id}_modified.paf \\
+            --output ${prefix}_\${cluster_id}_modified.chain
+
+        CrossMap \\
+            bed \\
+            ${prefix}_\${cluster_id}_modified.chain \\
+            orfipy/${prefix}_\${cluster_id}.bed \\
+            ${prefix}_\${cluster_id}_lifted.bed
     else
         orfipy \\
             $ref \\
