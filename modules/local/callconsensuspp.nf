@@ -82,7 +82,7 @@ process CALLCONSENSUSPP {
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
         
-        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDNA/_cDNA\\n/g' > ${prefix}_\${cluster_id}_modified.fasta
+        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' > ${prefix}_\${cluster_id}_modified.fasta
 
         orfipy \\
             ${prefix}_\${cluster_id}_modified.fasta \\
