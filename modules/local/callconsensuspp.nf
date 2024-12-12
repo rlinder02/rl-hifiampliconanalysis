@@ -28,10 +28,10 @@ process CALLCONSENSUSPP {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def cluster_id = prefix.split('_').last()
     """
     file_name=\$(basename $bam .bam)
-    cluster_id=\${file_name##*_}
-
+    echo $cluster_id
     samtools \\
         view \\
         $bam \\
@@ -82,7 +82,7 @@ process CALLCONSENSUSPP {
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
         
-        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' | sed 's/>.*/>${prefix}_\$\"{cluster_id}\"/' > ${prefix}_\${cluster_id}_modified.fasta
+        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' | sed 's/>.*/>${prefix}_\${cluster_id}/' > ${prefix}_\${cluster_id}_modified.fasta
 
         orfipy \\
             ${prefix}_\${cluster_id}_modified.fasta \\
