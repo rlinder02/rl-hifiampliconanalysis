@@ -108,6 +108,7 @@ process CALLCONSENSUSPP {
         
         cd orfipy
         rm -f *.bed
+        cd ..
 
     else
         orfipy \\
