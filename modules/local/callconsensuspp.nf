@@ -91,10 +91,10 @@ process CALLCONSENSUSPP {
             --procs $task.cpus
 
         minimap2 \\
-            -a \\
+            -cx -asm20 \\
             --cs \\
             ${prefix}_\${cluster_id}_modified.fasta \\
-            $ref \\
+            ${prefix}_\${cluster_id}.fasta \\
             -o ${prefix}_\${cluster_id}_modified.sam
         
     else
