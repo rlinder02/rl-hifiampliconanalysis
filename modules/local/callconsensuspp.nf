@@ -16,7 +16,7 @@ process CALLCONSENSUSPP {
     path("*modified.vcf.gz")                                     , emit: vcf        , optional: true
     path("*.fasta")                                              , emit: con_fasta  , optional: true
     path("orfipy/*.bed")                                         , emit: orf_bed    , optional: true
-    path("*transanno.bed")                                       , emit: orf_bed    , optional: true
+    path("*transanno.bed")                                       , emit: orf_bed_tr , optional: true
     tuple val(meta), path("*.txt")                               , emit: txt        , optional: true
     path("*chain")                                               , emit: chain      , optional: true
     path("*.paf")                                                , emit: paf        , optional: true
@@ -76,32 +76,25 @@ process CALLCONSENSUSPP {
     then
         bcftools \\
             consensus \\
-            -a '*' \\
+            -a 'N' \\
             -i 'QUAL >= 20' \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
         
-        cat ${prefix}_\${cluster_id}.fasta | tr -d '*' | tr -d '-' | tr -d '\\n' | sed 's/_cDNA/_cDNA\\n/g' > ${prefix}_\${cluster_id}_modified.fasta
+        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDNA/_cDNA\\n/g' > ${prefix}_\${cluster_id}_modified.fasta
 
         orfipy \\
             ${prefix}_\${cluster_id}_modified.fasta \\
             --bed ${prefix}_\${cluster_id}.bed \\
             --outdir orfipy \\
             --procs $task.cpus
-
-        bcftools \\
-            consensus \\
-            -i 'QUAL >= 20' \\
-            -o ${prefix}_\${cluster_id}_no_fill.fasta \\
-            -f $ref \\
-            ${prefix}_\${cluster_id}_modified.vcf.gz
         
         minimap2 \\
             -cx asm20 \\
             --cs \\
+            ${prefix}_\${cluster_id}.fasta \\
             ${prefix}_\${cluster_id}_modified.fasta \\
-            ${prefix}_\${cluster_id}_no_fill.fasta \\
             -o ${prefix}_\${cluster_id}_modified.paf
 
         transanno minimap2chain \\

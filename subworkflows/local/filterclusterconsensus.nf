@@ -90,9 +90,14 @@ workflow FILTERCLUSTERCONSENSUS {
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
 
-    ch_orf_beds_pp = CALLCONSENSUSPP.out.orf_bed.map { file -> 
+    ch_orf_beds_pp = CALLCONSENSUSPP.out.orf_bed_tr.map { file -> 
                     def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
+    
+    ch_orf_beds_pp_ref = CALLCONSENSUSPP.out.orf_bed.map { file -> 
+                    def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
+                    return tuple(key, file) }.groupTuple()
+
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
