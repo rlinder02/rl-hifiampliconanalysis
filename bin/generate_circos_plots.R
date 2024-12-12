@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "hTARDBP_cDNA_full.bed"
-bounds <- "hTARDBP_cDNA.txt"
-total_reads <- "total_reads_fofn.txt"
-gene_name <- "TARDBP"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hTARDBP_cDNA_full.bed"
+# bounds <- "hTARDBP_cDNA.txt"
+# total_reads <- "total_reads_fofn.txt"
+# gene_name <- "TARDBP"
+# orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-12_run")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-12_run")
 
 
 # ============================================================================
@@ -198,7 +198,7 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   struct_columns <- c("feature", "start", "end", "strand")
   expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
   cluster_id <- strsplit(gsub(".bed", "", orf_file), "_")[[1]]
-  cluster_id <- cluster_id[length(cluster_id)]
+  cluster_id <- cluster_id[length(cluster_id)-2]
   expanded_dt_struct[, c("sample", "cluster") := .(gsub("_cluster.*|_pp.*", "", orf_file), cluster_id)]
   expanded_dt_struct
 }
