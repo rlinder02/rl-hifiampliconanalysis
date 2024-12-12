@@ -5,17 +5,21 @@ process CALLCONSENSUS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2':
-        'community.wave.seqera.io/library/bcftools_minimap2_orfipy_samtools:bf1ad8c75d6d3cf2' }"
-
+        'oras://community.wave.seqera.io/library/bcftools_crossmap_minimap2_orfipy_pruned:a10b34d7e4795d31':
+        'community.wave.seqera.io/library/bcftools_crossmap_minimap2_orfipy_pruned:a10b34d7e4795d31' }"
+    containerOptions = "--user root"
+    
     input:
     tuple val(meta), path(bam), path(ref)
 
     output:
     path("*modified.vcf.gz")                                     , emit: vcf       , optional: true
     path("*.fasta")                                              , emit: con_fasta , optional: true
-    path("orfipy/*.bed")                                         , emit: orf_bed   , optional: true
-    tuple val(meta), path("*.txt")                               , emit: txt       , optional: true
+    path("orfipy/*.bed")                                         , emit: orf_bed    , optional: true
+    path("*transanno.bed")                                       , emit: orf_bed_tr , optional: true
+    tuple val(meta), path("*.txt")                               , emit: txt        , optional: true
+    path("*chain")                                               , emit: chain      , optional: true
+    path("*.paf")                                                , emit: paf        , optional: true
     path "versions.yml"                                          , emit: versions
 
     when:
@@ -84,18 +88,41 @@ process CALLCONSENSUS {
     then
         bcftools \\
             consensus \\
-            -a '*' \\
-            --mark-del '-' \\
+            -a 'N' \\
             -i 'QUAL >= 20 & INFO/DP >= 5' \\
             -o ${prefix}_\${cluster_id}.fasta \\
             -f $ref \\
             -H I \\
             ${prefix}_\${cluster_id}_modified.vcf.gz
+        
+        cat ${prefix}_\${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' > ${prefix}_\${cluster_id}_modified.fasta
+        
         orfipy \\
-            ${prefix}_\${cluster_id}.fasta \\
+            ${prefix}_\${cluster_id}_modified.fasta \\
             --bed ${prefix}_\${cluster_id}.bed \\
             --outdir orfipy \\
             --procs $task.cpus
+
+        minimap2 \\
+            -cx asm20 \\
+            --cs \\
+            ${prefix}_\${cluster_id}.fasta \\
+            ${prefix}_\${cluster_id}_modified.fasta \\
+            -o ${prefix}_\${cluster_id}_modified.paf
+
+        transanno minimap2chain \\
+            ${prefix}_\${cluster_id}_modified.paf \\
+            --output ${prefix}_\${cluster_id}_modified.chain
+
+        transanno liftbed \\
+            --chain ${prefix}_\${cluster_id}_modified.chain \\
+            --output ${prefix}_\${cluster_id}_lifted_transanno.bed \\
+            orfipy/${prefix}_\${cluster_id}.bed
+        
+        cd orfipy
+        rm -f *.bed
+        cd ..
+    
     else
         orfipy \\
             $ref \\

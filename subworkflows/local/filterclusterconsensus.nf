@@ -86,21 +86,13 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_versions = ch_versions.mix(CALLCONSENSUSPP.out.versions.first())
 
     // combine all samples that queried the same gene so can compare across samples
-    ch_orf_beds = CALLCONSENSUS.out.orf_bed.map { file -> 
+    ch_orf_beds_not_ref = CALLCONSENSUS.out.orf_bed_tr.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
 
     ch_orf_beds_pp_not_ref = CALLCONSENSUSPP.out.orf_bed_tr.map { file -> 
                     def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
                     return tuple(key, file) }.groupTuple()
-    
-    ch_orf_beds_pp_ref = CALLCONSENSUSPP.out.orf_bed.map { file -> 
-                    def key = file.name.toString().split('/').last().split('_pp').first().split('_').last()
-                    return tuple(key, file) }.groupTuple()
-
-    ch_orf_beds_pp = ch_orf_beds_pp_not_ref.combine(ch_orf_beds_pp_ref, by:0)
-    ch_orf_beds_pp_not_ref.view()
-    ch_orf_beds_pp.view()
 
     ch_vcfs = CALLCONSENSUS.out.vcf.map { file -> 
                     def key = file.name.toString().split('/').last().split('_clu').first().split('_').last()
@@ -124,7 +116,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
-    ch_orf_beds_all = ch_orf_beds.combine(ch_orf_beds_pp, by:0).map {meta, clusters, pps ->
+
+    ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
                                                             def files = clusters + pps
                                                             return tuple(meta, files)}
     
@@ -132,7 +125,7 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
-
+    ch_vcfs_bed_bounds_reads_orfs.view()
     // CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
     // ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
 
