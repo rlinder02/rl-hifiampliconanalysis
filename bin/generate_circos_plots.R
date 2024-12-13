@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "hTARDBP_cDNA_full.bed"
-bounds <- "hTARDBP_cDNA.txt"
-total_reads <- "total_reads_fofn.txt"
-gene_name <- "TARDBP"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hTARDBP_cDNA_full.bed"
+# bounds <- "hTARDBP_cDNA.txt"
+# total_reads <- "total_reads_fofn.txt"
+# gene_name <- "TARDBP"
+# orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
@@ -51,7 +51,7 @@ library(gridBase)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-12_run")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-12_run")
 
 
 # ============================================================================
