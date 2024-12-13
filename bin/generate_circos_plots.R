@@ -172,7 +172,12 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   vcf_dt <- fread(vcf_file)
   vcf_dt[, depth := as.numeric(str_match(vcf_dt$INFO, 'DP=(\\d+)')[,2])]
   # subset for regions with coverage - remove sites with 0 coverage 
-  vcf_dt <- vcf_dt[depth > 0]
+  #vcf_dt <- vcf_dt[depth > 0]
+  if(grepl("cluster", vcf_file)) {
+    vcf_dt <- vcf_dt[depth > 4]
+  } else {
+    vcf_dt <- vcf_dt[depth > 0]
+  }
   # subtract one from the vcf file coordinates so is in bed coordinate space (0-based)
   vcf_dt[, POS := POS - 1 ]
   vcf_dt[ref_bed_dt, on=.(POS >= start, POS <= end), feature := i.feature]
