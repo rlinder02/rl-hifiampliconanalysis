@@ -104,7 +104,7 @@ process CALLCONSENSUS {
             --procs $task.cpus
 
         minimap2 \\
-            -cx asm20 \\
+            -c \\
             --cs \\
             ${prefix}_${cluster_id}.fasta \\
             ${prefix}_${cluster_id}_modified.fasta \\
