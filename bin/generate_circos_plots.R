@@ -201,11 +201,16 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   if(ref_bed_dt$end[1] - orf_dt_cds_longest$V2 == 0) {
     orf_dt_cds_longest[, c("V2", "V3") := .(V2 + 1, V3 + 1)]
   }
-  expanded_dt <- data.table(POS = orf_dt_cds_longest$V2:orf_dt_cds_longest$V3, strand = orf_dt_cds_longest$V6)
-  expanded_dt[vcf_dt_structure, on=.(POS >= start, POS <= end), c("feature", "runs") := .(i.feature, i.runs)]
+  # find out if longest CDS orf is in-frame
+  in_frame <- FALSE
+  if(orf_dt_cds_longest$V2 - (ref_bed_dt$start[ref_bed_dt$feature == "1"][1] + 1) %% 3 == 0) {
+    in_frame <- TRUE
+  } 
+  expanded_dt <- data.table(POS = orf_dt_cds_longest$V2:orf_dt_cds_longest$V3, strand = orf_dt_cds_longest$V6, in_frame = in_frame)
+  expanded_dt[vcf_dt_structure, on=.(POS >= start, POS <= end), c("feature", "runs", "in_frame") := .(i.feature, i.runs, in_frame)]
   expanded_dt <- expanded_dt[!is.na(feature)]
   expanded_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
-  struct_columns <- c("feature", "start", "end", "strand")
+  struct_columns <- c("feature", "start", "end", "strand", "in_frame")
   expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
   cluster_id <- strsplit(gsub(".bed", "", orf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)-2]
