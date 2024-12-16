@@ -7,22 +7,20 @@ include { QUALIMAP_BAMQC } from '../../modules/nf-core/qualimap/bamqc/main'
 workflow QCALIGN {
 
     take:
-    ch_samplesheet 
+    ch_fastq_only
+    ch_ref
 
     main:
-
-    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
-    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
     ch_versions = Channel.empty()
 
-    CONVERTTOFASTA ( ch_fastq )
+    CONVERTTOFASTA ( ch_fastq_only )
     ch_versions = ch_versions.mix(CONVERTTOFASTA.out.versions.first())
 
     // need to change FCS_FCSADAPTOR so if no contaminating sequences found, still outputs a fa.gz file for alignment step
     FCS_FCSADAPTOR ( CONVERTTOFASTA.out.fasta )
     ch_versions = ch_versions.mix(FCS_FCSADAPTOR.out.versions.first())
 
-    NANOPLOT ( ch_fastq )
+    NANOPLOT ( ch_fastq_only )
     ch_versions = ch_versions.mix(NANOPLOT.out.versions.first())
 
     ch_fastas = FCS_FCSADAPTOR.out.cleaned_assembly.combine(ch_ref, by:0)
@@ -41,4 +39,3 @@ workflow QCALIGN {
     bam_qc                = QUALIMAP_BAMQC.out.results             // channel: [ val(meta), [ outdir ] ]
     versions              = ch_versions                            // channel: [ versions.yml ]
 }
-

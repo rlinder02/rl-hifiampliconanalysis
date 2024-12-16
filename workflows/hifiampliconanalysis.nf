@@ -27,23 +27,33 @@ workflow HIFIAMPLICONANALYSIS {
     
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
-
+    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
+    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
+    // only process fastq.gz or fq.gz files (reads); fasta files get processed later
+    ch_fastq_only = ch_fastq.map { meta, file -> 
+                    def fileType = file.name.toString().split('/').last().split('\\.').last()
+                    if (fileType != "fasta") {
+                        return tuple(meta, file)
+                    }
+                 }
 
     //
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
     //
-    QCALIGN ( ch_samplesheet )
+    QCALIGN ( ch_fastq_only,
+                ch_ref
+            )
 
     ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.nanostats_report.map {it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.bam_qc.map {it[1]})
     ch_versions = ch_versions.mix(QCALIGN.out.versions)
+    aligned_fasta = QCALIGN.out.aligned_fasta
     
-
     //
     // SUBWORKFLOW: Filter for aligned reads with both primers sequences present, then cluster based on sequence similarity, then identify a single consensus sequence for each cluster 
     //
     FILTERCLUSTERCONSENSUS ( ch_samplesheet,
-                             QCALIGN.out.aligned_fasta
+                             aligned_fasta
                            )
 
     ch_versions = ch_versions.mix(FILTERCLUSTERCONSENSUS.out.versions)

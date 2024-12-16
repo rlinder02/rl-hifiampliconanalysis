@@ -13,7 +13,7 @@ process CIRCOS {
 
     output:
     tuple val(meta), path("*.png"), emit: png
-    tuple val(meta), path("*.bed"), emit: struct_bed
+    tuple val(meta), path("*.bed"), emit: struct_bed, optional: true
     path "versions.yml"           , emit: versions
 
     when:
@@ -25,8 +25,9 @@ process CIRCOS {
     """
     vcf_list=\$(echo $vcfs | sed 's/ /\\n/g' | sort > vcf_fofn.txt)
     orf_list=\$(echo $orfs | sed 's/ /\\n/g' | sort > orf_fofn.txt)
+    total_reads_list=\$(echo $total_reads | sed 's/ /\\n/g' | sort > total_reads_fofn.txt)
 
-    generate_circos_plots.R vcf_fofn.txt $bed $bounds $total_reads $meta orf_fofn.txt
+    generate_circos_plots.R vcf_fofn.txt $bed $bounds total_reads_fofn.txt $meta orf_fofn.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
