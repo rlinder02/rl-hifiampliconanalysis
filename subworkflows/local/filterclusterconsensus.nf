@@ -6,7 +6,7 @@ include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
-include { CIRCOS           } from '../../modules/local/circos'
+include { SPECIESPLOTS     } from '../../modules/local/speciesplots'
 
 workflow FILTERCLUSTERCONSENSUS {
 
@@ -126,13 +126,13 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
  
-    CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
-    ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
+    SPECIESPLOTS ( ch_vcfs_bed_bounds_reads_orfs )
+    ch_versions = ch_versions.mix(SPECIESPLOTS.out.versions.first())
 
     // create a module to combine tables of amplicon structure and mutations from the CIRCOS module across samples from the same gene to find the same species across samples 
 
     emit:
-    fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
+    fasta    = FINDPRIMERS.out.filtered_fasta    // channel: [ val(meta), [ fasta ] ]
     versions = ch_versions                       // channel: [ versions.yml ]
 }
 
