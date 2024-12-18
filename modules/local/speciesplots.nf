@@ -5,8 +5,8 @@ process SPECIESPLOTS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://docker.io/rlinder02/ggtranscript:v0.0.1':
-        'docker.io/rlinder02/ggtranscript:v0.0.1' }"
+        'https://docker.io/rlinder02/ggtranscript:v0.0.2':
+        'docker.io/rlinder02/ggtranscript:v0.0.2' }"
 
     input:
     tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads), path(orfs)
