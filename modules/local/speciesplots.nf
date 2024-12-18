@@ -5,8 +5,8 @@ process SPECIESPLOTS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_pruned:8987b0b2d3ee3ff2':
-        'community.wave.seqera.io/library/bioconductor-complexheatmap_r-circlize_r-data.table_r-gridbase_pruned:8987b0b2d3ee3ff2' }"
+        'https://docker.io/rlinder02/ggtranscript:v0.0.1':
+        'docker.io/rlinder02/ggtranscript:v0.0.1' }"
 
     input:
     tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads), path(orfs)

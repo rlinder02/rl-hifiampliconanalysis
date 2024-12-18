@@ -29,23 +29,19 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "hTARDBP_cDNA_full.bed"
-bounds <- "hTARDBP_cDNA.txt"
-total_reads <- "total_reads_fofn.txt"
-gene_name <- "TARDBP"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "hTARDBP_cDNA_full.bed"
+# bounds <- "hTARDBP_cDNA.txt"
+# total_reads <- "total_reads_fofn.txt"
+# gene_name <- "TARDBP"
+# orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
 # Load packages and sourced files
-library(magrittr)
-library(dplyr)
+
 library(data.table)
-library(ggplot2)
 library(ggtranscript)
-library(ComplexHeatmap)
-library(gridBase)
 library(tidyverse)
 library(Polychrome)
 
@@ -55,7 +51,7 @@ library(Polychrome)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-13_run")
+# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-13_run")
 
 
 # ============================================================================
@@ -404,19 +400,30 @@ vcf_structs <- do.call('rbind', vcf_structs)
 ref_struct <- data.table(feature = ref_bed_dt$feature, start = ref_bed_dt$start, end = ref_bed_dt$end, maxDepth = 1, sample = "wildtype", cluster = "wildtype")
 vcf_structs <- rbind(vcf_structs, ref_struct)
 orf_dfs <- do.call('rbind', orf_dfs)
+ref_orf_dt <- ref_bed_dt[!(grepl("UTR", feature))]
+ref_orf <- data.table(feature = ref_orf_dt$feature, start = ref_orf_dt$start, end = ref_orf_dt$end, strand = "+", in_frame = TRUE, sample = "wildtype", cluster = "wildtype")
+orf_dfs <- rbind(orf_dfs, ref_orf)
 setnames(id_dt, old = "cluster_id", new = "cluster")
 # ============================================================================
 # Generate ggtranscript plot
+wt_dt <- id_dt[.N]
+id_dt2 <- rbind(wt_dt, id_dt)
+id_dt2 <- id_dt2[1:(nrow(id_dt)-1)]
 
-id_vcf_structs <- vcf_structs[id_dt, on=.(sample, cluster)]
+id_vcf_structs <- vcf_structs[id_dt2, on=.(sample, cluster)]
 id_vcf_structs[, c("seqnames", "strand", "type", "gene_name", "transcript_name") := .(1, "+", ifelse(grepl("UTR", feature), "UTR", "CDS"), gene_name, genc_id)]
 setcolorder(id_vcf_structs, neworder = c("seqnames", "start", "end", "strand", "type", "gene_name", "transcript_name"))
 id_vcf_structs[, genc_id_order := as.numeric(gsub(".*_", "", transcript_name))]
 id_vcf_structs$transcript_name <- factor(id_vcf_structs$transcript_name)
 id_vcf_structs[, features := gsub("3'|5'", "", feature)]
+dup_samples <- id_vcf_structs[, unique(sample_cluster), by = genc_id]
+dup_rows <- dup_samples[, which(duplicated(genc_id))]
+dup_sample_clusters <- dup_samples$V1[dup_rows]
+id_vcf_structs <- id_vcf_structs[!sample_cluster %in% c(dup_sample_clusters)]
 cds <- id_vcf_structs[type == "CDS"]
 
-id_orf_dfs <- orf_dfs[id_dt, on = .(sample, cluster)]
+
+id_orf_dfs <- orf_dfs[id_dt2, on = .(sample, cluster)]
 id_orf_dfs <- id_orf_dfs[, genc_id_order := as.numeric(gsub(".*_", "", genc_id))][order(genc_id_order)]
 correct_order_orfs <- data.table(genc_id_order = unique(id_orf_dfs$genc_id_order), correct_order = match(unique(id_orf_dfs$genc_id_order),unique(id_vcf_structs$genc_id_order)))
 id_orf_dfs <- id_orf_dfs[correct_order_orfs, on = "genc_id_order"]
@@ -424,7 +431,16 @@ id_orf_dfs[, transcript_name := factor(genc_id)]
 id_orf_dfs[, features := gsub("3'|5'", "", feature)]
 id_orf_dfs[, orf_frame := ifelse(in_frame == TRUE, "In frame ORF", "Out of frame\nORF")]
 
-id_vcf_muts <- vcf_muts[id_dt, on = .(sample, cluster)]
+# from the id_orf_dfs, get the info needed for labelling samples as brackets 
+unique_positions <- id_orf_dfs[,unique(correct_order), by = sample]
+min_positions <- unique_positions[, min(V1), by = sample]
+min_positions$features <- 1
+min_positions[, sample := sub("_", "\n", sample)]
+min_positions[, sample := sub("_.*$", "", sample)]
+max_positions <- unique_positions[, max(V1), by = sample]
+
+
+id_vcf_muts <- vcf_muts[id_dt2, on = .(sample, cluster)]
 id_vcf_muts <- na.omit(id_vcf_muts)
 id_vcf_muts <- id_vcf_muts[, genc_id_order := as.numeric(gsub(".*_", "", genc_id))][order(genc_id_order)]
 id_vcf_muts[, `Mutation type` := ifelse(symbol == 16, "SNV", "INDEL")]
@@ -435,162 +451,49 @@ id_vcf_muts[, features := gsub("3'|5'", "", feature)]
 color_pal <- createPalette(length(unique(cds$feature)),  c("#ff0000", "#00ff00", "#0000ff"))
 feature_colors <- data.table(features = c("In frame ORF", "Out of frame\nORF", as.character(sort(unique(as.numeric(cds$feature)))), "UTR"), color = c("#008000","#808080", color_pal, "#FFFFFF"))
 
-struct_plot <- ggplot(id_vcf_structs, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order), fill = features)) + 
-  geom_range(fill = "white", height = 0.25) +
-  geom_range(data = cds, alpha = 0.5) +
+struct_plot <- ggplot() + 
+  geom_range(data = id_vcf_structs, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order)), fill = "white", height = 0.25) +
+  geom_range(data = cds, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order), fill = features), alpha = 0.5) +
   geom_point(data = id_vcf_muts, aes(start, correct_order, colour = `Mutation type`), shape = 16, size = 0.5) +
   geom_rect(data = id_orf_dfs, aes(xmin = start, xmax = end, ymin = correct_order + 0.25, ymax = correct_order + 0.5, fill = orf_frame)) +
+  geom_segment(data = min_positions, aes(x = I(-0.16), xend = I(-0.16), y = V1-0.25, yend = max_positions$V1 +0.25), linetype=1, linewidth=0.5) +
+  geom_text(data=min_positions, aes(x=I(-0.21), y=(V1-0.25+max_positions$V1+0.25)/2,  label = sample), angle = 90, fontface = "plain", size = 3.5) +
   scale_fill_manual(values = feature_colors$color, limits = c(feature_colors$features)) + 
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  coord_cartesian(xlim = c(0, ceiling(ref_bed_dt$end[nrow(ref_bed_dt)])), clip="off") +
+  ylab("") +
+  xlab("position (bp)") +
   theme_bw() +
+  theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
-  
-  
 
 ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
 
 # ============================================================================
-# Generate Circos plot
-
-num_sectors <- ref_bed_dt[, uniqueN(feature)]
-first_sector <- ref_bed_dt$feature[1]
-col_fun = colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
-
-lgd_muts = Legend(at = c("SNV", "INDEL"), type = "points", pch = c(16,17), title_position = "topleft", title = "Mutation\ntype", labels_gp = gpar(fontsize = 8), title_gp = gpar(fontsize = 8, fontface = "bold"))
-lgd_reads = Legend(col_fun = col_fun, title_position = "topleft", title = "Read\nfraction", labels_gp = gpar(fontsize = 8), title_gp = gpar(fontsize = 8, fontface = "bold"))
-lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest\nORF", labels_gp = gpar(fontsize = 8), title_gp = gpar(fontsize = 8, fontface = "bold"))
-
-#lgd_orfs = Legend(at = c("ORF"), type = "lines", legend_gp = gpar(col = "purple", lwd = 1, ), title_position = "topleft", title = "Longest ORF")
-lgd_list_vertical = packLegend(lgd_orfs, lgd_muts, lgd_reads)
-
-# loop through all samples to create one circos plot per sample that will be combined into a single plot 
-# layout(matrix(c(rep(1,15), rep(2, 11), rep(4,4), rep(3, 15)), ncol = 15, byrow = TRUE))
-# layout(matrix(1:9, 3, 3))
-
-num_rows <- max(c(floor(length(unique(id_dt$sample))/2), 1))
-num_cols <- ceiling(length(unique(id_dt$sample))/num_rows)
-png(paste0(gene_name, "_circos_plot_v3.png"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)), units = "in", res = 1200)
-#pdf(paste0(gene_name, "_circos_plot.pdf"), height = min(c(12, num_rows*4)) , width = min(c(12, num_cols*4)))
-
-par(mfrow = c(num_rows, num_cols))
-
-plot_counter <- 0
-sample_loop <- lapply(unique(id_dt$sample), function(samp) {
-  print(samp)
-  flush.console()
-  coverage_dt <- sample_coverage_dt[sample == samp]
-  vcf_struct_dt <- vcf_structs[sample == samp]
-  genc_id_dt <- id_dt[sample == samp]
-  vcf_mut_dt <- vcf_muts[sample == samp]
-  orf_dt <- orf_dfs[sample == samp]
-  total_reads_dt <- total_reads_dfs[sample == samp]
-  total_reads_num <- total_reads_dt$V1
-  plot_counter <<- plot_counter + 1
-  #fileName <- paste0(samp, "_circos_plot.png")
-  #png(fileName, height = 12, width = 8, units = "in", res = 1200)
-  #par(mar = c(0, 0, 0, 0))
-  if(plot_counter %in% seq(1, num_rows*num_cols, num_cols)) {
-    par(mar = c(0, 2, 0, 0))
-  } else {
-    par(mar = c(0, 2, 0, 0))
-  }
-  circos.par("track.height" = 0.05, track.margin = c(0.001, 0.001), circle.margin = c(0.1, 0.1, 0.1, 0.1), "start.degree" = 90, gap.after = c(rep(1, num_sectors-1), 20), points.overflow.warning = FALSE, cell.padding = c(0.01, 1, 0.01, 1))
-  circos.genomicInitialize(ref_bed_dt, plotType = NULL)
-  # outermost track of wild-type exon structure
-  circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
-    chr = CELL_META$sector.index
-    xlim = CELL_META$xlim
-    ylim = CELL_META$ylim
-    #circos.rect(xlim[1], 0, xlim[2], 1, col = "gray")
-    circos.text(mean(xlim), mean(ylim), chr, cex = 0.7, col = "black",
-                facing = "inside", niceFacing = TRUE)
-  }, track.height = 0.05, bg.border = NA)
-  
-  circos.genomicTrack(coverage_dt, numeric.column = 5, ylim = range(coverage_dt$read_depth, na.rm = TRUE), track.height = 0.075, panel.fun = function(region, value, ...) {
-    circos.genomicLines(region, value, col = "blue", lwd = 1, ...)
-    if (CELL_META$sector.index == first_sector & CELL_META$track.index == 2) {
-      circos.yaxis(at = range(coverage_dt$read_depth), labels = format(range(coverage_dt$read_depth), scientific = TRUE, digits = 2), labels.cex = 0.5)
-    }
-  } )
-  counter <- 2
-  genc_dfs <- lapply(unique(genc_id_dt$genc_id), function(genc) {
-    genc_dt <- genc_id_dt[genc_id == genc]
-    vcf_struct_df <- vcf_struct_dt[cluster %in% unique(genc_dt$cluster_id)]
-    vcf_muts_df <- vcf_mut_dt[cluster %in% unique(genc_dt$cluster_id)]
-    orf_df <- orf_dt[cluster %in% unique(genc_dt$cluster_id)]
-    vcf_max_depth <- vcf_struct_df$maxDepth[1]
-    # remove the depth column from vcf_struct_df
-    struct_cols <- c("feature", "start", "end")
-    vcf_struct_df <- vcf_struct_df[, ..struct_cols]
-    orf_struct_df <- orf_df[, ..struct_cols]
-    vcf_track_col <- vcf_max_depth/total_reads_num
-    counter <<- counter + 1
-    print(counter)
-    flush.console()
-    circos.genomicTrack(vcf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
-      i = getI(...)
-      xlim = CELL_META$xlim
-      circos.rect(region$start, 0, region$end, 1, col = add.alpha(col_fun(vcf_track_col), 0.4), border = "black", track.index = counter)
-      if (CELL_META$sector.index == first_sector) {
-        circos.yaxis(at = 0.5, labels = genc, labels.cex = 0.5, track.index = counter)
-      }
-    })
-    circos.genomicTrack(vcf_muts_df, numeric.column = 4, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
-      i = getI(...)
-      xlim = CELL_META$xlim
-      circos.genomicPoints(region, value, pch = value$symbol, cex = 0.7, col = "darkred", track.index = counter, ...)
-    })
-    # adding predicted longest orf
-    circos.genomicTrack(orf_struct_df, ylim = c(0, 1), track.height = 0.05, bg.border = NA, panel.fun = function(region, value, ...) {
-      i = getI(...)
-      xlim = CELL_META$xlim
-      circos.rect(region$start, 0.25, region$end, 0.75, col = add.alpha("slategrey", 0.5), border = NA, lwd = 1.5, density = 45, angle = 45, track.index = counter)
-    })
-    sample <- strsplit(samp, "_")[[1]]
-    sample <- paste(sample[1:(length(sample)-1)], collapse = "_")
-    vcf_struct_gsds <- data.table(sample = sample, genc_id = genc, struct_id = genc_dt$struct_id[1], start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
-    return(vcf_struct_gsds)
-  } )
-  genc_dfs_combined <- do.call('rbind', genc_dfs)
-  title(main = samp, cex.main = 1, line = -2, xpd = NA)
-  circos.clear()
-  
-  #draw(lgd_list_vertical, x = unit(0.03, "npc"), y = unit(0.75, "npc"), just = c("left", "top"))
-  #dev.off()
-  
-  return(genc_dfs_combined)
-} )
-# plot(1, type = "n", axes=FALSE, xlab="", ylab="", xlim = c(0,1), ylim = c(0,1))
-# legend(x = 0.5, y = 1, legend = c("SNV", "INDEL"), pch = c(16,17), cex=1, horiz = TRUE, title="Mutation type", bty="n")
-# legend(x = 0.5, y = 0.85, legend = c("ORF"), pch = "/", col = "slategrey", cex=1, horiz = TRUE, title="Longest ORF", bty="n")
-
-#lgd_orfs = Legend(labels = "ORF", type = 'points', pch = 26, legend_gp = gpar(col = "slategrey", alpha = 0.5), title_position = "topleft", title = "Longest ORF")
-
-draw(lgd_list_vertical, x = unit(0.01, "npc"), y = unit(0.99, "npc"), just = c("left", "top")) # need to expand canvas to the left
-dev.off()
-
-# ============================================================================
 # Generate a bed file of wild-type and all amplicons' exon structures; may want to just keep individual gencDNAs by id, then can have separate plot showing in which samples they were detected in
-struct_df <- do.call('rbind', sample_loop)
-repeated_features <- struct_df[, rle(featureType), by = genc_id]
-repeat_id <- unlist(sapply(repeated_features$lengths, function(x) seq(1, x)))
-struct_df[, featureType := paste0(featureType, ".", repeat_id)]
-struct_same_dt <- struct_df[, lapply(.SD, function(x) paste(unique(x), collapse = ";")), by = struct_id]
-struct_same_df <- struct_same_dt %>% separate_longer_delim(c(start, end, featureType), delim = ";")
-
-struct_bed <- struct_same_df[, c("genc_id", "start", "end", "featureType")]
-struct_bed <- setDT(struct_bed)[, featureType := gsub("\\..*", "", featureType)]
-struct_bed[, featureType := ifelse(grepl("UTR", featureType), "UTR", paste0("CDS", featureType))]
-struct_bed[, c("start", "end") := .(as.numeric(start), as.numeric(end))]
-struct_df_max_length <- struct_bed[, max(end)]
-
-ref_bed <- pre.process.bed_wt(bed)
-ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
-ref_bed_df <- data.table(genc_id = paste0(gene_name, "_wt"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
-new_ref_max <- struct_df_max_length + round((ref_bed_max_length - struct_df_max_length)/4, 0)
-ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
-all_df <- rbind(ref_bed_df, struct_bed)
-fwrite(all_df, file = paste0(gene_name, "_structure.bed"), sep = "\t", col.names = FALSE)
+# vcf_struct_gsds <- data.table(sample = sample, genc_id = genc, struct_id = genc_dt$struct_id[1], start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
+# struct_df <- do.call('rbind', sample_loop)
+# repeated_features <- struct_df[, rle(featureType), by = genc_id]
+# repeat_id <- unlist(sapply(repeated_features$lengths, function(x) seq(1, x)))
+# struct_df[, featureType := paste0(featureType, ".", repeat_id)]
+# struct_same_dt <- struct_df[, lapply(.SD, function(x) paste(unique(x), collapse = ";")), by = struct_id]
+# struct_same_df <- struct_same_dt %>% separate_longer_delim(c(start, end, featureType), delim = ";")
+# 
+# struct_bed <- struct_same_df[, c("genc_id", "start", "end", "featureType")]
+# struct_bed <- setDT(struct_bed)[, featureType := gsub("\\..*", "", featureType)]
+# struct_bed[, featureType := ifelse(grepl("UTR", featureType), "UTR", paste0("CDS", featureType))]
+# struct_bed[, c("start", "end") := .(as.numeric(start), as.numeric(end))]
+# struct_df_max_length <- struct_bed[, max(end)]
+# 
+# ref_bed <- pre.process.bed_wt(bed)
+# ref_bed_max_length <- ref_bed$end[nrow(ref_bed)]
+# ref_bed_df <- data.table(genc_id = paste0(gene_name, "_wt"), start = ref_bed$start, end = ref_bed$end, featureType = ref_bed$featureType)
+# new_ref_max <- struct_df_max_length + round((ref_bed_max_length - struct_df_max_length)/4, 0)
+# ref_bed_df$end[nrow(ref_bed_df)] <- new_ref_max
+# all_df <- rbind(ref_bed_df, struct_bed)
+# fwrite(all_df, file = paste0(gene_name, "_structure.bed"), sep = "\t", col.names = FALSE)
 
 # ============================================================================
 # Generate an upset plot of the number of samples that share a unique genc_id
