@@ -112,19 +112,18 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
-    // is_empty = ch_extra_fasta 
-    //     | count 
-    //     | branch { count -> 
-    //                 TRUE: count == 0
-    //                 FALSE: count > 0
-    //              }
-    // is_empty.TRUE | println("There is not an extra fasta")
-    // is_empty.view()
+    is_empty = ch_extra_fasta 
+        | count 
+        | branch { count -> 
+                    TRUE: count == 0
+                    FALSE: count > 0
+                 }
+    is_empty.TRUE | println("There is not an extra fasta")
+    is_empty.view()
     ch_vcfs_pp.count().toInteger().view()
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
-    ch_vcfs_all = ch_vcfs_all.ifEmpty ( ch_vcfs )
     ch_vcfs_all.view()
     // if ( ch_vcfs_pp.count().toInteger() > 0 ) {
         
@@ -142,8 +141,6 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
                                                             def files = clusters + pps
                                                             return tuple(meta, files)}
-    
-    ch_orf_beds_all = ch_orf_beds_all.ifEmpty ( ch_orf_beds_not_ref )
 
     ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
