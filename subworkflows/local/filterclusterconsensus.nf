@@ -7,7 +7,7 @@ include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
 include { SPECIESPLOTS     } from '../../modules/local/speciesplots'
-include { SPECIESPLOTSNOPP } from '../../modules/local/speciesplotsnopp'
+include { SPECIESPLOTNOPP } from '../../modules/local/speciesplotnopp'
 workflow FILTERCLUSTERCONSENSUS {
 
     take:
@@ -137,8 +137,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds_reads2 = ch_vcfs_bed_bounds2.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs2 = ch_vcfs_bed_bounds_reads2.combine(ch_orf_beds_not_ref, by:0)
 
-    SPECIESPLOTSNOPP ( ch_vcfs_bed_bounds_reads_orfs2 )
-    ch_versions = ch_versions.mix(SPECIESPLOTSNOPP.out.versions.first())
+    SPECIESPLOTNOPP ( ch_vcfs_bed_bounds_reads_orfs2 )
+    ch_versions = ch_versions.mix(SPECIESPLOTNOPP.out.versions.first())
 
     emit:
     fasta    = FINDPRIMERS.out.filtered_fasta    // channel: [ val(meta), [ fasta ] ]
