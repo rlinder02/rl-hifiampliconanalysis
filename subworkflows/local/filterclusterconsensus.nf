@@ -118,7 +118,6 @@ workflow FILTERCLUSTERCONSENSUS {
                     TRUE: count == 0
                     FALSE: count > 0
                  }
-    is_empty.TRUE | println("There is not an extra fasta")
     is_empty.view()
     ch_vcfs_pp.count().toInteger().view()
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
