@@ -112,14 +112,16 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
-
+    if (ch_extra_fasta ) {
+        println("There is an extra fasta")
+    }
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
     
     // may need to add conditional if statement above to prevent combining vcf channels unless the preprocessed pseudogenes fasta exists 
-    //ch_vcfs.view()
-    ch_vcfs_all.view()
+    ch_vcfs.view()
+    //ch_vcfs_all.view()
     ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
                                                             def files = clusters + pps
                                                             return tuple(meta, files)}
