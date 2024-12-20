@@ -126,7 +126,7 @@ workflow FILTERCLUSTERCONSENSUS {
     //                                                         return tuple(meta, files) }
     
     // may need to join them first, then 
-    ch_vcfs.combine(ch_vcfs_pp, by:0).view()
+    ch_vcfs.join(ch_vcfs_pp).view()
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {if ( it =~/pp/ ) {
                                                             meta, clusters, pps -> 
                                                             def files = clusters + pps
