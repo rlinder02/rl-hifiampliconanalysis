@@ -121,7 +121,7 @@ workflow FILTERCLUSTERCONSENSUS {
     // is_empty.TRUE | println("There is not an extra fasta")
     // is_empty.view()
     ch_vcfs_pp.count().toInteger().view()
-    ch_vcfs_pp.is_empty().view()
+    println(is_empty(ch_vcfs_pp))
     // if ( ch_vcfs_pp.count().toInteger() > 0 ) {
     //     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
     //                                                         def files = clusters + pps
