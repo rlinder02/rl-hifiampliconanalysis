@@ -116,8 +116,9 @@ workflow FILTERCLUSTERCONSENSUS {
                     TRUE: count == 0
                     FALSE: count > 0
                  }
+    is_empty.FALSE.view()
     is_empty.TRUE.view()
-    ch_vcfs_pp.count().toInteger().view()
+    //ch_vcfs_pp.count().toInteger().view()
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
