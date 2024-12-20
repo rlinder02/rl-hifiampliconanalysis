@@ -134,6 +134,7 @@ workflow FILTERCLUSTERCONSENSUS {
                                                                 meta, clusters ->
                                                                 return tuple(meta, clusters)
                                                             }
+                                                        }
 
     // if (!fileType.contains("pp")) {
     //                     return tuple(meta, file, ref)
