@@ -116,7 +116,9 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
-    ch_vcfs.view()
+    
+    // may need to add conditional if statement above to prevent combining vcf channels unless the preprocessed pseudogenes fasta exists 
+    //ch_vcfs.view()
     ch_vcfs_all.view()
     ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
                                                             def files = clusters + pps
