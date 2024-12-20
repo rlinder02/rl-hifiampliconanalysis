@@ -6,8 +6,8 @@ include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
-include { SPECIESPLOTS     } from '../../modules/local/speciesplots'
-
+include { SPECIESPLOTS as SPECIESPLOTS1    } from '../../modules/local/speciesplots'
+include { SPECIESPLOTS as SPECIESPLOTS2    } from '../../modules/local/speciesplots'
 workflow FILTERCLUSTERCONSENSUS {
 
     take:
@@ -112,30 +112,13 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
-    is_empty = ch_extra_fasta.count().branch { count -> 
-                    TRUE: count == 0
-                    FALSE: count > 0
-                 }
-    is_empty.FALSE.view()
-    is_empty.TRUE.view()
-    //ch_vcfs_pp.count().toInteger().view()
+
+    
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
-    ch_vcfs_all.view()
-    // if ( ch_vcfs_pp.count().toInteger() > 0 ) {
-        
-    // } else {
-    //     ch_vcfs_all = ch_vcfs
-    // }
-    // if (!fileType.contains("pp")) {
-    //                     return tuple(meta, file, ref)
-    //                 } 
-    // ch_phenotype.filter{ it =~/control/ }
-    //                 .ifEmpty{ exit 1, "no control values in condition column"}
-    // may need to add conditional if statement above to prevent combining vcf channels unless the preprocessed pseudogenes fasta exists 
-    //ch_vcfs.view()
-    // ch_vcfs_all.view()
+
+   
     ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
                                                             def files = clusters + pps
                                                             return tuple(meta, files)}
@@ -144,11 +127,18 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
- 
-    SPECIESPLOTS ( ch_vcfs_bed_bounds_reads_orfs )
-    ch_versions = ch_versions.mix(SPECIESPLOTS.out.versions.first())
+    
+    SPECIESPLOTS1 ( ch_vcfs_bed_bounds_reads_orfs )
+    ch_versions = ch_versions.mix(SPECIESPLOTS1.out.versions.first())
 
-    // create a module to combine tables of amplicon structure and mutations from the CIRCOS module across samples from the same gene to find the same species across samples 
+    // if no processed pseudogenes, then run separately 
+    ch_vcfs_bed2 = ch_vcfs.combine(ch_bed, by:0)
+    ch_vcfs_bed_bounds2 = ch_vcfs_bed2.combine(ch_bounds, by:0)
+    ch_vcfs_bed_bounds_reads2 = ch_vcfs_bed_bounds2.combine(ch_total_reads, by:0)
+    ch_vcfs_bed_bounds_reads_orfs2 = ch_vcfs_bed_bounds_reads2.combine(ch_orf_beds_not_ref, by:0)
+
+    SPECIESPLOTS2 ( ch_vcfs_bed_bounds_reads_orfs2 )
+    ch_versions = ch_versions.mix(SPECIESPLOTS2.out.versions.first())
 
     emit:
     fasta    = FINDPRIMERS.out.filtered_fasta    // channel: [ val(meta), [ fasta ] ]

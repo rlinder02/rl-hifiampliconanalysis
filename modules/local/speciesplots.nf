@@ -23,7 +23,6 @@ process SPECIESPLOTS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta}"
     """
-    echo $meta
     vcf_list=\$(echo $vcfs | sed 's/ /\\n/g' | grep 'Preprocessed' | sort > vcf_fofn.txt)
     vcf_list2=\$(echo $vcfs | sed 's/ /\\n/g' | grep -v 'Preprocessed' | sort >> vcf_fofn.txt)
     orf_list=\$(echo $orfs | sed 's/ /\\n/g' | grep 'Preprocessed' | sort > orf_fofn.txt)
