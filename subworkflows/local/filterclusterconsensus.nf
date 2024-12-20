@@ -135,18 +135,18 @@ workflow FILTERCLUSTERCONSENSUS {
     //                 .ifEmpty{ exit 1, "no control values in condition column"}
     // may need to add conditional if statement above to prevent combining vcf channels unless the preprocessed pseudogenes fasta exists 
     //ch_vcfs.view()
-    ch_vcfs_all.view()
-    ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
-                                                            def files = clusters + pps
-                                                            return tuple(meta, files)}
+    // ch_vcfs_all.view()
+    // ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
+    //                                                         def files = clusters + pps
+    //                                                         return tuple(meta, files)}
     
-    ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
-    ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
-    ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
-    ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
+    // ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
+    // ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
+    // ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
+    // ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
  
-    SPECIESPLOTS ( ch_vcfs_bed_bounds_reads_orfs )
-    ch_versions = ch_versions.mix(SPECIESPLOTS.out.versions.first())
+    // SPECIESPLOTS ( ch_vcfs_bed_bounds_reads_orfs )
+    // ch_versions = ch_versions.mix(SPECIESPLOTS.out.versions.first())
 
     // create a module to combine tables of amplicon structure and mutations from the CIRCOS module across samples from the same gene to find the same species across samples 
 
