@@ -6,8 +6,8 @@ include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
-include { SPECIESPLOTS as SPECIESPLOTS1    } from '../../modules/local/speciesplots'
-include { SPECIESPLOTS as SPECIESPLOTS2    } from '../../modules/local/speciesplots'
+include { SPECIESPLOTS     } from '../../modules/local/speciesplots'
+include { SPECIESPLOTSNOPP } from '../../modules/local/speciesplotsnopp'
 workflow FILTERCLUSTERCONSENSUS {
 
     take:
@@ -128,8 +128,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
     
-    SPECIESPLOTS1 ( ch_vcfs_bed_bounds_reads_orfs )
-    ch_versions = ch_versions.mix(SPECIESPLOTS1.out.versions.first())
+    SPECIESPLOTS ( ch_vcfs_bed_bounds_reads_orfs )
+    ch_versions = ch_versions.mix(SPECIESPLOTS.out.versions.first())
 
     // if no processed pseudogenes, then run separately 
     ch_vcfs_bed2 = ch_vcfs.combine(ch_bed, by:0)
@@ -137,8 +137,8 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_vcfs_bed_bounds_reads2 = ch_vcfs_bed_bounds2.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs2 = ch_vcfs_bed_bounds_reads2.combine(ch_orf_beds_not_ref, by:0)
 
-    SPECIESPLOTS2 ( ch_vcfs_bed_bounds_reads_orfs2 )
-    ch_versions = ch_versions.mix(SPECIESPLOTS2.out.versions.first())
+    SPECIESPLOTSNOPP ( ch_vcfs_bed_bounds_reads_orfs2 )
+    ch_versions = ch_versions.mix(SPECIESPLOTSNOPP.out.versions.first())
 
     emit:
     fasta    = FINDPRIMERS.out.filtered_fasta    // channel: [ val(meta), [ fasta ] ]
