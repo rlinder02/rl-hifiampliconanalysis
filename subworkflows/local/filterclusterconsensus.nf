@@ -112,9 +112,7 @@ workflow FILTERCLUSTERCONSENSUS {
                                     return tuple(key, txt) }.groupTuple().map {group -> 
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
-    is_empty = ch_extra_fasta 
-        | count 
-        | branch { count -> 
+    is_empty = ch_extra_fasta.count.branch { count -> 
                     TRUE: count == 0
                     FALSE: count > 0
                  }
