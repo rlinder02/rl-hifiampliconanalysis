@@ -120,14 +120,14 @@ workflow FILTERCLUSTERCONSENSUS {
     //              }
     // is_empty.TRUE | println("There is not an extra fasta")
     // is_empty.view()
-    
-    if ( ch_vcfs_pp.count() > 0 ) {
-        ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
-                                                            def files = clusters + pps
-                                                            return tuple(meta, files) }
-    } else {
-        ch_vcfs_all = ch_vcfs
-    }
+    ch_vcfs_pp.count().toInteger().view()
+    // if ( ch_vcfs_pp.count() > 0 ) {
+    //     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
+    //                                                         def files = clusters + pps
+    //                                                         return tuple(meta, files) }
+    // } else {
+    //     ch_vcfs_all = ch_vcfs
+    // }
     // if (!fileType.contains("pp")) {
     //                     return tuple(meta, file, ref)
     //                 } 
