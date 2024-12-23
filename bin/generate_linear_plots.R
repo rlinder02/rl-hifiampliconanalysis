@@ -342,7 +342,7 @@ cluster_id <- unlist(lapply(gsub("_modified.*", "", vcf_list$V1), function(clust
   splitting[length(splitting)]
 } ) )
 
-id_dt <- data.table("sample" = c(sample_names, "wildtype"), "sample_cluster" = c(base_names, "wildtype"), "cluster_id" = c(cluster_id, "wildtype"), "genc_id" = c(paste0(gene_name, "_", seq(1, length(base_names))), "wildtype_0"), "struct_id" = seq(1, length(base_names)+1))
+id_dt <- data.table("sample" = c(sample_names, "wt"), "sample_cluster" = c(base_names, "wildtype"), "cluster_id" = c(cluster_id, "wildtype"), "genc_id" = c(paste0(gene_name, "_", seq(1, length(base_names))), "wildtype_0"), "struct_id" = seq(1, length(base_names)+1))
 id_dt[, IDX := .I ]
 
 modify_by_struct <- lapply(identical_struct_groups, function(struct) {
@@ -399,11 +399,11 @@ if(length(common_values) > 0) {
 
 vcf_muts <- do.call('rbind', vcf_muts)
 vcf_structs <- do.call('rbind', vcf_structs)
-ref_struct <- data.table(feature = ref_bed_dt$feature, start = ref_bed_dt$start, end = ref_bed_dt$end, maxDepth = 1, sample = "wildtype", cluster = "wildtype")
+ref_struct <- data.table(feature = ref_bed_dt$feature, start = ref_bed_dt$start, end = ref_bed_dt$end, maxDepth = 1, sample = "wt", cluster = "wildtype")
 vcf_structs <- rbind(vcf_structs, ref_struct)
 orf_dfs <- do.call('rbind', orf_dfs)
 ref_orf_dt <- ref_bed_dt[!(grepl("UTR", feature))]
-ref_orf <- data.table(feature = ref_orf_dt$feature, start = ref_orf_dt$start, end = ref_orf_dt$end, strand = "+", in_frame = TRUE, sample = "wildtype", cluster = "wildtype")
+ref_orf <- data.table(feature = ref_orf_dt$feature, start = ref_orf_dt$start, end = ref_orf_dt$end, strand = "+", in_frame = TRUE, sample = "wt", cluster = "wildtype")
 orf_dfs <- rbind(orf_dfs, ref_orf)
 setnames(id_dt, old = "cluster_id", new = "cluster")
 # ============================================================================
