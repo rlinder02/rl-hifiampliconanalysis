@@ -467,7 +467,7 @@ struct_plot <- ggplot() +
   theme_bw() +
   theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
-  theme(aspect.ratio = 0.5) +
+  theme(aspect.ratio = 0.3) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
 
 
