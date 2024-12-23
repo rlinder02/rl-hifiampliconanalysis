@@ -464,7 +464,7 @@ struct_plot <- ggplot() +
   coord_cartesian(xlim = c(0, ceiling(ref_bed_dt$end[nrow(ref_bed_dt)])), clip="off") +
   ylab("") +
   xlab("position (bp)") +
-  ylim(c(0,20)) +
+  coord_cartesian(ylim = c(0,20)) +
   theme_bw() +
   theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
