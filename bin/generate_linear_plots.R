@@ -30,10 +30,10 @@ orfs <- args[6]
 # For trouble-shooting locally
 
 # vcfs <- "vcf_fofn.txt"
-# bed <- "hTARDBP_cDNA_full.bed"
-# bounds <- "hTARDBP_cDNA.txt"
+# bed <- "hMAPT_cDNA_full.bed"
+# bounds <- "hMAPT_cDNA.txt"
 # total_reads <- "total_reads_fofn.txt"
-# gene_name <- "TARDBP"
+# gene_name <- "MAPT"
 # orfs <- "orf_fofn.txt"
 
 
@@ -51,7 +51,7 @@ library(Polychrome)
 options(digits = 10)
 projectDir <- getwd()
 
-# setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-13_run")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/MAPT/2024-12-20_run")
 
 
 # ============================================================================
@@ -72,19 +72,19 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt[, feature := gsub("CDS_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
-  # limit plotting to primer bounds
+  # limit plotting to primer bounds; change so limit plotting to CDS only if ORFs not included in primer bounds
   if(ref_bounds_dt$V1[1] < ref_bed_dt$end[1]) {
     start_row <- 1
   } else {
-    start_row <- max(which(ref_bed_dt$end < ref_bounds_dt$V1[1]))+1
+    start_row <- which(ref_bed_dt$feature == 1)
   }
-  ref_bed_dt$start[start_row] <- ref_bounds_dt$V1[1]
+  #ref_bed_dt$start[start_row] <- ref_bounds_dt$V1[1]
   if(ref_bounds_dt$V1[2] > ref_bed_dt$start[nrow(ref_bed_dt)]) {
     end_row <- nrow(ref_bed_dt)
   } else {
-    end_row <- min(which(ref_bed_dt$start > ref_bounds_dt$V1[2]))-1
+    end_row <- which(ref_bed_dt$feature == max(as.numeric(ref_bed_dt$feature), na.rm = TRUE))
   }
-  ref_bed_dt$end[end_row] <- ref_bounds_dt$V1[2]
+  #ref_bed_dt$end[end_row] <- ref_bounds_dt$V1[2]
   ref_bed_dt <- ref_bed_dt[start_row:end_row]
 }
 
@@ -332,7 +332,7 @@ identical_struct_groups <- identify.identical.dfs(vcf_structs, columns = c("feat
 # Find the intersection of data frames that are identical between both the structural and mutation data frames, outputting a list
 common_values <- find.common.values(identical_struct_groups, identical_mut_groups)
 
-# make an initial dataframe of sample/cluster names and corresponding genc ID ann row index
+# make an initial dataframe of sample/cluster names and corresponding genc ID and row index
 base_names <- gsub(".vcf.gz", "", vcf_list$V1)
 sample_names <- gsub("_cluster.*|_pp.*", "", vcf_list$V1)
 cluster_id <- unlist(lapply(gsub("_modified.*", "", vcf_list$V1), function(clust) {
@@ -449,7 +449,7 @@ id_vcf_muts <- id_vcf_muts[correct_order_muts, on = "genc_id_order"]
 id_vcf_muts[, features := gsub("3'|5'", "", feature)]
 
 color_pal <- createPalette(length(unique(cds$feature)),  c("#ff0000", "#00ff00", "#0000ff"))
-feature_colors <- data.table(features = c("In frame ORF", "Out of frame\nORF", as.character(sort(unique(as.numeric(cds$feature)))), "UTR"), color = c("#008000","#808080", color_pal, "#FFFFFF"))
+feature_colors <- data.table(features = c("In frame ORF", "Out of frame\nORF", as.character(sort(unique(as.numeric(cds$feature)))), "UTR"), color = c("#008000","#808080", color_pal, "#FFFFFF")) 
 
 struct_plot <- ggplot() + 
   geom_range(data = id_vcf_structs, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order)), fill = "white", height = 0.25) +
@@ -467,6 +467,7 @@ struct_plot <- ggplot() +
   theme_bw() +
   theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
+  theme(aspect.ratio=4/3) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
 
 ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
