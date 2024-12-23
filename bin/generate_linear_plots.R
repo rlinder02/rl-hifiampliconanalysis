@@ -30,10 +30,10 @@ orfs <- args[6]
 # For trouble-shooting locally
 
 # vcfs <- "vcf_fofn.txt"
-# bed <- "hMAPT_cDNA_full.bed"
-# bounds <- "hMAPT_cDNA.txt"
+# bed <- "hTARDBP_cDNA_full.bed"
+# bounds <- "hTARDBP_cDNA.txt"
 # total_reads <- "total_reads_fofn.txt"
-# gene_name <- "MAPT"
+# gene_name <- "TARDBP"
 # orfs <- "orf_fofn.txt"
 
 
@@ -51,7 +51,7 @@ library(Polychrome)
 options(digits = 10)
 projectDir <- getwd()
 
-#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/MAPT/2024-12-20_run")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-13_run")
 
 
 # ============================================================================
@@ -435,6 +435,7 @@ id_orf_dfs[, orf_frame := ifelse(in_frame == TRUE, "In frame ORF", "Out of frame
 unique_positions <- id_orf_dfs[,unique(correct_order), by = sample]
 min_positions <- unique_positions[, min(V1), by = sample]
 min_positions$features <- 1
+#min_positions$sample[3] <- "E13-27\nCTL"
 min_positions[, sample := sub("_", "\n", sample)]
 min_positions[, sample := sub("_.*$", "", sample)]
 max_positions <- unique_positions[, max(V1), by = sample]
@@ -456,8 +457,8 @@ struct_plot <- ggplot() +
   geom_range(data = cds, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order), fill = features), alpha = 0.5) +
   geom_point(data = id_vcf_muts, aes(start, correct_order, colour = `Mutation type`), shape = 16, size = 0.5) +
   geom_rect(data = id_orf_dfs, aes(xmin = start, xmax = end, ymin = correct_order + 0.25, ymax = correct_order + 0.5, fill = orf_frame)) +
-  geom_segment(data = min_positions, aes(x = I(-0.16), xend = I(-0.16), y = V1-0.25, yend = max_positions$V1 +0.25), linetype=1, linewidth=0.5) +
-  geom_text(data=min_positions, aes(x=I(-0.21), y=(V1-0.25+max_positions$V1+0.25)/2,  label = sample), angle = 90, fontface = "plain", size = 3.5) +
+  geom_segment(data = min_positions, aes(x = I(-0.2), xend = I(-0.2), y = V1-0.25, yend = max_positions$V1 +0.25), linetype=1, linewidth=0.5) +
+  geom_text(data=min_positions, aes(x=I(-0.24), y=(V1-0.25+max_positions$V1+0.25)/2,  label = sample), angle = 90, fontface = "plain", size = 3) +
   scale_fill_manual(values = feature_colors$color, limits = c(feature_colors$features)) + 
   scale_x_continuous(expand=c(0,0)) +
   scale_y_discrete(expand=c(0,0)) +
@@ -465,9 +466,9 @@ struct_plot <- ggplot() +
   ylab("") +
   xlab("position (bp)") +
   theme_bw() +
-  theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
+  theme(plot.margin = unit(c(0.75,0.75,0.25,1), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
-  theme(aspect.ratio = 0.35) +
+  theme(aspect.ratio = (0.017544 + 0.081579*length(unique(id_orf_dfs$genc_id)))) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
 
 
@@ -475,6 +476,7 @@ ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8,
 
 # , ylim = c(0,20), expand = FALSE # add to coord_cartesian
 # ============================================================================
+
 # Generate a bed file of wild-type and all amplicons' exon structures; may want to just keep individual gencDNAs by id, then can have separate plot showing in which samples they were detected in
 # vcf_struct_gsds <- data.table(sample = sample, genc_id = genc, struct_id = genc_dt$struct_id[1], start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
 # struct_df <- do.call('rbind', sample_loop)
