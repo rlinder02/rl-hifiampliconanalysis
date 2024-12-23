@@ -75,12 +75,14 @@ pre.process.bed <- function(bed_file, bounds_file) {
   # limit plotting to primer bounds; change so limit plotting to CDS only if ORFs not included in primer bounds
   if(ref_bounds_dt$V1[1] < ref_bed_dt$end[1]) {
     start_row <- 1
+    ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
   } else {
     start_row <- which(ref_bed_dt$feature == 1)
   }
   #ref_bed_dt$start[start_row] <- ref_bounds_dt$V1[1]
   if(ref_bounds_dt$V1[2] > ref_bed_dt$start[nrow(ref_bed_dt)]) {
     end_row <- nrow(ref_bed_dt)
+    ref_bed_dt$end[nrow(ref_bed_dt)] <- ref_bounds_dt$V1[2]
   } else {
     end_row <- which(ref_bed_dt$feature == max(as.numeric(ref_bed_dt$feature), na.rm = TRUE))
   }
