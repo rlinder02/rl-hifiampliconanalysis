@@ -464,10 +464,10 @@ struct_plot <- ggplot() +
   coord_cartesian(xlim = c(0, ceiling(ref_bed_dt$end[nrow(ref_bed_dt)])), clip="off") +
   ylab("") +
   xlab("position (bp)") +
+  ylim(c(0,20)) +
   theme_bw() +
   theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
-  theme(aspect.ratio=4/3) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
 
 ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
