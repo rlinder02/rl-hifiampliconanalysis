@@ -464,14 +464,16 @@ struct_plot <- ggplot() +
   coord_cartesian(xlim = c(0, ceiling(ref_bed_dt$end[nrow(ref_bed_dt)])), clip="off") +
   ylab("") +
   xlab("position (bp)") +
-  coord_cartesian(ylim = c(0,20)) +
   theme_bw() +
   theme(plot.margin = unit(c(0.5,1,0.5,0.75), "cm")) +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
+  theme(aspect.ratio = 0.5) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
+
 
 ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
 
+# , ylim = c(0,20), expand = FALSE # add to coord_cartesian
 # ============================================================================
 # Generate a bed file of wild-type and all amplicons' exon structures; may want to just keep individual gencDNAs by id, then can have separate plot showing in which samples they were detected in
 # vcf_struct_gsds <- data.table(sample = sample, genc_id = genc, struct_id = genc_dt$struct_id[1], start = vcf_struct_df$start, end = vcf_struct_df$end, featureType = vcf_struct_df$feature)
