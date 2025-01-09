@@ -42,7 +42,7 @@ clusterize_recurse <- function(dna, cutoff, threads) {
     rownames(c1)[c1$cluster==clust]
   })
   # cap at 5 clusters per amplicon sequenced by recursively calling the Clusterize function
-  if(length(cluster_list) > 5 & cutoff <= 0.9) {
+  if(length(cluster_list) > 10 & cutoff <= 0.9) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
     print(length(cluster_list))
@@ -67,8 +67,9 @@ output_name <- strsplit(output_name, "\\.")[[1]][1]
 set.seed(123)
 
 median_width <- median(width(dna)) # round to the nearest hundredth
-#cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 15001, 1000)), bp_end = c(500, 1000, seq(2000, 16000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.05)))
-cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.15)))
+#cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.15)))
+cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.9,0.95,0.95,rep(0.98,4) ))
+
 if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
   cutoff <- 0.95
 } else {
