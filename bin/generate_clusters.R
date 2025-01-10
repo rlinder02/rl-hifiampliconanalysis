@@ -21,6 +21,7 @@ if (length(args) < 2) {
 
 fasta <-  args[1]
 threads <- as.numeric(args[2])
+#num_diffs <- as.numeric(args[3])
 
 # ============================================================================
 # Load packages and sourced files
@@ -41,8 +42,8 @@ clusterize_recurse <- function(dna, cutoff, threads) {
   cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
     rownames(c1)[c1$cluster==clust]
   })
-  # cap at 5 clusters per amplicon sequenced by recursively calling the Clusterize function
-  if(length(cluster_list) > 10 & cutoff <= 0.9) {
+  # cap at 15 clusters per amplicon sequenced by recursively calling the Clusterize function
+  if(length(cluster_list) > 15 & cutoff < 0.9) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
     print(length(cluster_list))
@@ -68,7 +69,10 @@ set.seed(123)
 
 median_width <- median(width(dna)) # round to the nearest hundredth
 #cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.15)))
-cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.9,0.95,0.95,rep(0.98,4) ))
+cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)))
+# edit distance in bp between species for them to be clustered together; even 90% leads to hundreds of clusters for Smarca5
+#num_diffs <- 50 
+# cutoff_dt[, cutoff := 1-round(((bp_end - bp_start)-num_diffs)/(bp_end - bp_start), 2)]
 
 if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
   cutoff <- 0.95
@@ -76,7 +80,8 @@ if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
   cutoff <- find_cutoff$cutoff
 }
-# cluster sequences that are at least x% or higher similar to one another based on the median length of the input sequences
+cutoff <- 0.6
+# cluster sequences that are at least 40% or more similar to one another
 cluster_list <- clusterize_recurse(dna, cutoff, threads)
 print(paste0("Final length of clusters is ", length(cluster_list)))
 flush.console()
