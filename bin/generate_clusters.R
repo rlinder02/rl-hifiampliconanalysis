@@ -67,20 +67,20 @@ output_name <- strsplit(output_name, "\\.")[[1]][1]
 # use clusterize to cluster similar sequences, with a similarity cutoff based off the median sequence length
 set.seed(123)
 
-median_width <- median(width(dna)) # round to the nearest hundredth
+#median_width <- median(width(dna)) # round to the nearest hundredth
 #cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.15)))
-cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)))
+#cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)))
 # edit distance in bp between species for them to be clustered together; even 90% leads to hundreds of clusters for Smarca5
 #num_diffs <- 50 
 # cutoff_dt[, cutoff := 1-round(((bp_end - bp_start)-num_diffs)/(bp_end - bp_start), 2)]
 
-if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
-  cutoff <- 0.95
-} else {
-  find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
-  cutoff <- find_cutoff$cutoff
-}
-cutoff <- 0.6
+# if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
+#   cutoff <- 0.95
+# } else {
+#   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
+#   cutoff <- find_cutoff$cutoff
+# }
+cutoff <- 0.5
 # cluster sequences that are at least 40% or more similar to one another
 cluster_list <- clusterize_recurse(dna, cutoff, threads)
 print(paste0("Final length of clusters is ", length(cluster_list)))
@@ -96,6 +96,8 @@ denote_clusters <- unlist(DNAStringSetList(lapply(cluster_list, function(clust) 
   cluster_seqs <- dna[clust]
   if(length(cluster_seqs) >= 5) {
     names(cluster_seqs) <- paste0(names(cluster_seqs), "_cluster", counter)
+    print(counter)
+    flush.console()
     cluster_seqs
   }
 })))

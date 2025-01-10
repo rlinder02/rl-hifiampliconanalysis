@@ -21,7 +21,7 @@ process CLUSTER {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    generate_clusters.R $fasta $task.cpus 
+    generate_clusters.R $fasta $task.cpus
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
