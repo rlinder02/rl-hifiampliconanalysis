@@ -80,8 +80,8 @@ set.seed(123)
 #   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
 #   cutoff <- find_cutoff$cutoff
 # }
-cutoff <- 0.5
-# cluster sequences that are at least 40% or more similar to one another
+cutoff <- 0.4
+# cluster sequences that are at least 60% or more similar to one another
 cluster_list <- clusterize_recurse(dna, cutoff, threads)
 print(paste0("Final length of clusters is ", length(cluster_list)))
 flush.console()
