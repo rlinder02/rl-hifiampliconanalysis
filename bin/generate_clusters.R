@@ -38,12 +38,12 @@ projectDir <- getwd()
 # Custom functions
 
 clusterize_recurse <- function(dna, cutoff, threads) {
-  c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE)
+  c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE, minCoverage = -0.7)
   cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
     rownames(c1)[c1$cluster==clust]
   })
-  # cap at 15 clusters per amplicon sequenced by recursively calling the Clusterize function
-  if(length(cluster_list) > 15 & cutoff < 0.9) {
+  # cap at 30 clusters per amplicon sequenced by recursively calling the Clusterize function
+  if(length(cluster_list) > 30 & cutoff < 0.9) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
     print(length(cluster_list))
@@ -80,8 +80,8 @@ set.seed(123)
 #   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
 #   cutoff <- find_cutoff$cutoff
 # }
-cutoff <- 0.4
-# cluster sequences that are at least 60% or more similar to one another
+cutoff <- 0.6
+# cluster sequences that are at least 40% or more similar to one another
 cluster_list <- clusterize_recurse(dna, cutoff, threads)
 print(paste0("Final length of clusters is ", length(cluster_list)))
 flush.console()
