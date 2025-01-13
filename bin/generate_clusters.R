@@ -15,8 +15,8 @@
 # Parse command line inputs
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 2) {
-  stop("Usage: generate_clusters_consensus.R <fasta> <threads>", call.=FALSE)
+if (length(args) < 3) {
+  stop("Usage: generate_clusters_consensus.R <fasta> <threads> <bounds>", call.=FALSE)
 }
 
 fasta <-  args[1]
@@ -87,7 +87,7 @@ set.seed(123)
 # cluster sequences that are at least 95% or more similar to one another (previously 90% led to 8 Smarca5 species; 95% led to 107 Smarca5 species)
 cutoff <- 0.075
 # query sequences must overlap the cluster representative with at most 150 bases that don't align to cluster together
-min_cov <- round((amplicon_length - 150)/amplicon_length, 2)
+min_cov <- round((amplicon_length - 100)/amplicon_length, 2)
 
 cluster_list <- clusterize_recurse(dna, cutoff, threads, min_cov)
 print(paste0("Final length of clusters is ", length(cluster_list)))
