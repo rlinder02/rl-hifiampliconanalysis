@@ -37,8 +37,8 @@ projectDir <- getwd()
 # ============================================================================
 # Custom functions
 
-clusterize_recurse <- function(dna, cutoff, threads) {
-  c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE, minCoverage = -0.95)
+clusterize_recurse <- function(dna, cutoff, threads, minCov) {
+  c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE, minCoverage = -minCov)
   cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
     rownames(c1)[c1$cluster==clust]
   })
@@ -84,9 +84,12 @@ set.seed(123)
 #   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
 #   cutoff <- find_cutoff$cutoff
 # }
-cutoff <- 0.1
 # cluster sequences that are at least 90% or more similar to one another
-cluster_list <- clusterize_recurse(dna, cutoff, threads)
+cutoff <- 0.1
+# query sequences must overlap the cluster representative with at most 150 bases that don't align to cluster together
+min_cov <- round((amplicon_length - 150)/amplicon_length, 2)
+
+cluster_list <- clusterize_recurse(dna, cutoff, threads, min_cov)
 print(paste0("Final length of clusters is ", length(cluster_list)))
 flush.console()
 # ============================================================================
