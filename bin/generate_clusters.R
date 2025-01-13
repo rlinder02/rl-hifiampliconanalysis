@@ -44,7 +44,7 @@ clusterize_recurse <- function(dna, cutoff, threads, minCov) {
   })
   # cap at 30 clusters per amplicon sequenced by recursively calling the Clusterize function
   if(length(cluster_list) > 50 & cutoff < 0.9) {
-    cutoff <- cutoff + 0.05
+    cutoff <- cutoff + 0.025
     print("Next iteration")
     print(length(cluster_list))
     print(cutoff)
@@ -84,8 +84,8 @@ set.seed(123)
 #   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
 #   cutoff <- find_cutoff$cutoff
 # }
-# cluster sequences that are at least 95% or more similar to one another (previously 90% led to 8 Smarca5 species)
-cutoff <- 0.05
+# cluster sequences that are at least 95% or more similar to one another (previously 90% led to 8 Smarca5 species; 95% led to 107 Smarca5 species)
+cutoff <- 0.075
 # query sequences must overlap the cluster representative with at most 150 bases that don't align to cluster together
 min_cov <- round((amplicon_length - 150)/amplicon_length, 2)
 
