@@ -84,8 +84,8 @@ set.seed(123)
 #   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
 #   cutoff <- find_cutoff$cutoff
 # }
-# cluster sequences that are at least 90% or more similar to one another
-cutoff <- 0.1
+# cluster sequences that are at least 95% or more similar to one another (previously 90% led to 8 Smarca5 species)
+cutoff <- 0.05
 # query sequences must overlap the cluster representative with at most 150 bases that don't align to cluster together
 min_cov <- round((amplicon_length - 150)/amplicon_length, 2)
 
