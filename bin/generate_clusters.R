@@ -59,7 +59,7 @@ clusterize_recurse <- function(dna, cutoff, threads) {
 # ============================================================================
 # Load data
 dna <- readDNAStringSet(fasta)
-bounds_dt <- fread(bounds_file)
+bounds_dt <- fread(bounds)
 amplicon_length <- as.numeric(bounts_dt[2]) - as.numeric(bounds_dt[1])
 # filter out sequences longer than the length of the PCR product (calculated from primer boundaries), as these are likely concatamers formed during PCR
 dna <- dna[width(dna) <= amplicon_length]
