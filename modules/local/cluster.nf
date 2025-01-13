@@ -8,7 +8,7 @@ process CLUSTER {
         'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
 
     input:
-    tuple val(meta), path(fasta)
+    tuple val(meta), path(fasta), path(bounds)
 
     output:
     tuple val(meta), path("*_consensus.fasta"), emit: consensus_fasta
@@ -21,7 +21,7 @@ process CLUSTER {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    generate_clusters.R $fasta $task.cpus
+    generate_clusters.R $fasta $task.cpus $bounds
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

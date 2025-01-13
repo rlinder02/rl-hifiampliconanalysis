@@ -48,7 +48,10 @@ workflow FILTERCLUSTERCONSENSUS {
     FINDPRIMERS ( ch_fasta_primer1_primer2 )
     ch_versions = ch_versions.mix(FINDPRIMERS.out.versions.first())
 
-    CLUSTER ( FINDPRIMERS.out.filtered_fasta )
+    ch_find_primers_bounds = FINDPRIMERS.out.filtered_fasta.combine(BOUNDARIES.out.txt, by:0)
+    ch_find_primers_bounds.view()
+
+    CLUSTER ( ch_find_primers_bounds )
     ch_versions = ch_versions.mix(CLUSTER.out.versions.first())
 
     ch_clusters_ref = CLUSTER.out.consensus_fasta.combine(ch_ref, by:0)
@@ -106,14 +109,7 @@ workflow FILTERCLUSTERCONSENSUS {
                                     meta = meta.id.split('_').last()
                                     def key = meta
                                     return tuple(key, txt) }.groupTuple()
-    ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
-                                    meta = meta.id.split('_').last()
-                                    def key = meta
-                                    return tuple(key, txt) }.groupTuple().map {group -> 
-                                                                        def (key, values) = group
-                                                                        [key, values[0]]}
 
-    
     ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
                                                             def files = clusters + pps
                                                             return tuple(meta, files) }
@@ -122,6 +118,13 @@ workflow FILTERCLUSTERCONSENSUS {
     ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
                                                             def files = clusters + pps
                                                             return tuple(meta, files)}
+
+    ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
+                                    meta = meta.id.split('_').last()
+                                    def key = meta
+                                    return tuple(key, txt) }.groupTuple().map {group -> 
+                                                                        def (key, values) = group
+                                                                        [key, values[0]]}
 
     ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)

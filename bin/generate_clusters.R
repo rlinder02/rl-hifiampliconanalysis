@@ -21,7 +21,7 @@ if (length(args) < 2) {
 
 fasta <-  args[1]
 threads <- as.numeric(args[2])
-#num_diffs <- as.numeric(args[3])
+bounds <- args[3]
 
 # ============================================================================
 # Load packages and sourced files
@@ -38,12 +38,12 @@ projectDir <- getwd()
 # Custom functions
 
 clusterize_recurse <- function(dna, cutoff, threads) {
-  c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE, minCoverage = -0.7)
+  c1 <- Clusterize(dna, cutoff=cutoff, processors=threads, penalizeGapLetterMatches = TRUE, minCoverage = -0.95)
   cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
     rownames(c1)[c1$cluster==clust]
   })
   # cap at 30 clusters per amplicon sequenced by recursively calling the Clusterize function
-  if(length(cluster_list) > 30 & cutoff < 0.9) {
+  if(length(cluster_list) > 50 & cutoff < 0.9) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
     print(length(cluster_list))
@@ -59,6 +59,10 @@ clusterize_recurse <- function(dna, cutoff, threads) {
 # ============================================================================
 # Load data
 dna <- readDNAStringSet(fasta)
+bounds_dt <- fread(bounds_file)
+amplicon_length <- as.numeric(bounts_dt[2]) - as.numeric(bounds_dt[1])
+# filter out sequences longer than the length of the PCR product (calculated from primer boundaries), as these are likely concatamers formed during PCR
+dna <- dna[width(dna) <= amplicon_length]
 output_name <- strsplit(fasta, "/")[[1]]
 output_name <- output_name[[length(output_name)]]
 output_name <- strsplit(output_name, "\\.")[[1]][1]
@@ -80,8 +84,8 @@ set.seed(123)
 #   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
 #   cutoff <- find_cutoff$cutoff
 # }
-cutoff <- 0.6
-# cluster sequences that are at least 40% or more similar to one another
+cutoff <- 0.1
+# cluster sequences that are at least 90% or more similar to one another
 cluster_list <- clusterize_recurse(dna, cutoff, threads)
 print(paste0("Final length of clusters is ", length(cluster_list)))
 flush.console()
