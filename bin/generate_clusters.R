@@ -49,7 +49,7 @@ clusterize_recurse <- function(dna, cutoff, threads, minCov) {
     print(length(cluster_list))
     print(cutoff)
     flush.console()
-    clusterize_recurse(dna, cutoff, threads)
+    clusterize_recurse(dna, cutoff, threads, minCov)
   } else {
     print(paste0("new length is ", length(cluster_list)))
     flush.console()
