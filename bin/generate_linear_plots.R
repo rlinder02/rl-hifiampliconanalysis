@@ -478,7 +478,7 @@ my_legend <- get_legend(struct_plot + theme(legend.box.margin = margin(0, 0, 0, 
 
 struct_plot_nl <- plot_grid(struct_plot + theme(legend.position="none"))
 
-struct_plot_l <- plot_grid(struct_plot_nl, my_legend, rel_widths = c(3,1), align = 'vh', hjust = -1, nrow = 1)
+struct_plot_l <- plot_grid(struct_plot_nl, my_legend, rel_widths = c(4,1), align = 'vh', hjust = -1, nrow = 1)
 
 ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot_l, width = 8, height = 9, units = "in", dpi = 350)
 
