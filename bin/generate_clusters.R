@@ -43,7 +43,7 @@ clusterize_recurse <- function(dna, cutoff, threads, minCov) {
     rownames(c1)[c1$cluster==clust]
   })
   # cap at 30 clusters per amplicon sequenced by recursively calling the Clusterize function
-  if(length(cluster_list) > 50 & cutoff < 0.5) {
+  if(length(cluster_list) > 70 & cutoff < 0.5) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
     print(length(cluster_list))
