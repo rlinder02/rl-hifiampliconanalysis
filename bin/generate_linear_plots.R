@@ -469,7 +469,7 @@ struct_plot <- ggplot() +
   xlab("position (bp)") +
   theme_bw() +
   theme(plot.margin = unit(c(0.75,0.75,0.25,1), "cm")) +
-  theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
+  theme(legend.key=element_rect(colour="black"),legend.background=element_blank(), legend.key.size = unit(0.2, "cm")) + 
   theme(aspect.ratio = (0.017544 + 0.081579*length(unique(id_orf_dfs$genc_id)))) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
 
