@@ -44,6 +44,7 @@ library(data.table)
 library(ggtranscript)
 library(tidyverse)
 library(Polychrome)
+library(cowplot)
 
 # ============================================================================
 # Set global options
@@ -469,12 +470,17 @@ struct_plot <- ggplot() +
   xlab("position (bp)") +
   theme_bw() +
   theme(plot.margin = unit(c(0.75,0.75,0.25,1), "cm")) +
-  theme(legend.key=element_rect(colour="black"),legend.background=element_blank(), legend.key.size = unit(0.2, "cm")) + 
+  theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
   theme(aspect.ratio = (0.017544 + 0.081579*length(unique(id_orf_dfs$genc_id)))) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA)), colour = guide_legend(override.aes = list(size = 2)))
 
+my_legend <- get_legend(struct_plot + theme(legend.box.margin = margin(0, 0, 0 12)))
 
-ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
+struct_plot_nl <- plot_grid(struct_plot + theme(legend.position="none"))
+
+struct_plot_l <- plot_grid(struct_plot_nl, my_legend, rel_widths = c(3,1), align = 'vh', hjust = -1, nrow = 1)
+
+ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot_l, width = 8, height = 9, units = "in", dpi = 350)
 
 # , ylim = c(0,20), expand = FALSE # add to coord_cartesian
 # ============================================================================
