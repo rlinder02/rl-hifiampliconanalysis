@@ -30,10 +30,10 @@ orfs <- args[6]
 # For trouble-shooting locally
 
 # vcfs <- "vcf_fofn.txt"
-# bed <- "hTARDBP_cDNA_full.bed"
-# bounds <- "hTARDBP_cDNA.txt"
+# bed <- "hMAPT_cDNA_full.bed"
+# bounds <- "hMAPT_cDNA.txt"
 # total_reads <- "total_reads_fofn.txt"
-# gene_name <- "TARDBP"
+# gene_name <- "MAPT"
 # orfs <- "orf_fofn.txt"
 
 
@@ -52,7 +52,7 @@ library(cowplot)
 options(digits = 10)
 projectDir <- getwd()
 
-#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/TARDBP/2024-12-13_run")
+#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/MAPT/2025-01-14_run")
 
 
 # ============================================================================
@@ -364,27 +364,31 @@ if(length(common_values) > 0) {
       same_sample_dt <- lapply(unique(genc_dt$sample), function(samp) {
         same_samp_dt <- genc_dt[sample == samp]
         if(nrow(same_samp_dt) > 1) {
-          # subset the list of dataframes for just the unique ones within samples
-          remove_idces <- append(remove_idces, same_samp_dt$IDX)
+          # subset the list of dataframes for just the unique ones within samples; remove all identical clusters except the first one
+          remove_idces <<- append(remove_idces, same_samp_dt$IDX)
           # merge mutation frequency dataframes
           same_vcf_muts <- do.call('rbind', vcf_muts[c(same_samp_dt$IDX)])
           mean_vcf_muts <- same_vcf_muts[, .(value = mean(value)), by = .(feature, start, end, symbol, REF, ALT, sample)]
           setcolorder(mean_vcf_muts, c("feature", "start", "end", "value", "symbol", "REF", "ALT", "sample"))
           cluster_id <- same_vcf_muts$cluster[1]
           mean_vcf_muts[, cluster := cluster_id]
-          vcf_muts <- append(vcf_muts, list(mean_vcf_muts))
+          vcf_muts <<- append(vcf_muts, list(mean_vcf_muts))
           # merge vcf structure dataframes
           same_vcf_structs <- do.call('rbind', vcf_structs[c(same_samp_dt$IDX)])
+          cluster_id_structs <- same_vcf_structs$cluster[1]
           combined_depth <- same_vcf_structs[, .(maxDepth = sum(maxDepth)), by = .(feature, start, end, sample)]
           setcolorder(combined_depth, c("feature", "start", "end", "maxDepth", "sample"))
-          combined_depth[, cluster := cluster_id]
-          vcf_structs <- append(vcf_structs, list(combined_depth))
+          combined_depth[, cluster := cluster_id_structs]
+          vcf_structs <<- append(vcf_structs, list(combined_depth))
           # merge orf structure dataframes
           same_orf_structs <- do.call('rbind', orf_dfs[c(same_samp_dt$IDX)])
-          combined_strand <- same_orf_structs[, .(strand = unique(strand)), by = .(feature, start, end, sample)]
-          setcolorder(combined_strand, c("feature", "start", "end", "strand"))
-          combined_strand[, cluster := cluster_id]
-          orf_dfs <- append(orf_dfs, list(combined_strand))
+          # Can have multiple ORFs even if end up being called as same structure and mutations, so choose the most highly represented ORF of the group
+          most_common_orf <- same_orf_structs[, .N, by = c("feature", "start", "end")][order(-N)][1]
+          same_orf_structs2 <- same_orf_structs[feature == most_common_orf$feature & start == most_common_orf$start & end == most_common_orf$end]
+          combined_strand <- same_orf_structs2[, .(strand = unique(strand), in_frame = unique(in_frame)), by = .(feature, start, end, sample)]
+          setcolorder(combined_strand, c("feature", "start", "end", "strand", "in_frame"))
+          combined_strand[, cluster := cluster_id_structs]
+          orf_dfs <<- append(orf_dfs, list(combined_strand))
         }
     } ) 
   }
@@ -413,28 +417,36 @@ wt_dt <- id_dt[.N]
 id_dt2 <- rbind(wt_dt, id_dt)
 id_dt2 <- id_dt2[1:(nrow(id_dt)-1)]
 
-id_vcf_structs <- vcf_structs[id_dt2, on=.(sample, cluster)]
+id_vcf_structs <- merge(vcf_structs, id_dt2, by=c("sample", "cluster"))
 id_vcf_structs[, c("seqnames", "strand", "type", "gene_name", "transcript_name") := .(1, "+", ifelse(grepl("UTR", feature), "UTR", "CDS"), gene_name, genc_id)]
 setcolorder(id_vcf_structs, neworder = c("seqnames", "start", "end", "strand", "type", "gene_name", "transcript_name"))
-id_vcf_structs[, genc_id_order := as.numeric(gsub(".*_", "", transcript_name))]
+id_vcf_structs <- id_vcf_structs[, genc_id_order := as.numeric(gsub(".*_", "", transcript_name))][order(genc_id_order)]
+# If there are multiple samples with the same genc_id, need to refactor the ordering 
+mult_same_samps <- id_vcf_structs[, .(genc_id_order = unique(genc_id_order)), by = sample_cluster][, genc_id_order := c(0:(.N-1))]
+id_vcf_structs <- id_vcf_structs[, genc_id_order := NULL]
+id_vcf_structs <- merge(id_vcf_structs, mult_same_samps, by = "sample_cluster")
+id_vcf_structs <- id_vcf_structs[order(sample, genc_id_order)]
+id_vcf_structs <- rbind(id_vcf_structs[sample == "wt"], id_vcf_structs[grepl("Preprocessed", sample)], id_vcf_structs[sample != "wt" & !grepl("Preprocessed", sample)])
 id_vcf_structs$transcript_name <- factor(id_vcf_structs$transcript_name)
 id_vcf_structs[, features := gsub("3'|5'", "", feature)]
-dup_samples <- id_vcf_structs[, unique(sample_cluster), by = genc_id]
-dup_rows <- dup_samples[, which(duplicated(genc_id))]
-dup_sample_clusters <- dup_samples$V1[dup_rows]
-id_vcf_structs <- id_vcf_structs[!sample_cluster %in% c(dup_sample_clusters)]
+# want to keep the same genc_id if it's shared across multiple samples
 cds <- id_vcf_structs[type == "CDS"]
 
-
-id_orf_dfs <- orf_dfs[id_dt2, on = .(sample, cluster)]
+id_orf_dfs <- merge(orf_dfs, id_dt2, by=c("sample", "cluster"))
 id_orf_dfs <- id_orf_dfs[, genc_id_order := as.numeric(gsub(".*_", "", genc_id))][order(genc_id_order)]
+#mult_same_samps2 <- id_orf_dfs[, .(genc_id_order = unique(genc_id_order)), by = sample_cluster][, genc_id_order := c(0:(.N-1))]
+id_orf_dfs <- id_orf_dfs[, genc_id_order := NULL]
+id_orf_dfs <- merge(id_orf_dfs, mult_same_samps, by = "sample_cluster")
+id_orf_dfs <- id_orf_dfs[order(sample, genc_id_order)]
+id_orf_dfs <- rbind(id_orf_dfs[sample == "wt"], id_orf_dfs[grepl("Preprocessed", sample)], id_orf_dfs[sample != "wt" & !grepl("Preprocessed", sample)])
+
 correct_order_orfs <- data.table(genc_id_order = unique(id_orf_dfs$genc_id_order), correct_order = match(unique(id_orf_dfs$genc_id_order),unique(id_vcf_structs$genc_id_order)))
-id_orf_dfs <- id_orf_dfs[correct_order_orfs, on = "genc_id_order"]
+id_orf_dfs <- merge(id_orf_dfs, correct_order_orfs, by="genc_id_order")
 id_orf_dfs[, transcript_name := factor(genc_id)]
 id_orf_dfs[, features := gsub("3'|5'", "", feature)]
 id_orf_dfs[, orf_frame := ifelse(in_frame == TRUE, "In frame ORF", "Out of frame\nORF")]
 
-# from the id_orf_dfs, get the info needed for labelling samples as brackets 
+# from the id_orf_dfs, get the info needed for labeling samples as brackets 
 unique_positions <- id_orf_dfs[,unique(correct_order), by = sample]
 min_positions <- unique_positions[, min(V1), by = sample]
 min_positions$features <- 1
@@ -444,25 +456,49 @@ min_positions[, sample := sub("_.*$", "", sample)]
 max_positions <- unique_positions[, max(V1), by = sample]
 
 
-id_vcf_muts <- vcf_muts[id_dt2, on = .(sample, cluster)]
+id_vcf_muts <- merge(vcf_muts, id_dt2, by=c("sample", "cluster"))
 id_vcf_muts <- na.omit(id_vcf_muts)
 id_vcf_muts <- id_vcf_muts[, genc_id_order := as.numeric(gsub(".*_", "", genc_id))][order(genc_id_order)]
+id_vcf_muts <- id_vcf_muts[, genc_id_order := NULL]
+id_vcf_muts <- merge(id_vcf_muts, mult_same_samps, by = "sample_cluster")
+id_vcf_muts <- id_vcf_muts[order(sample, genc_id_order)]
+id_vcf_muts <- rbind(id_vcf_muts[grepl("Preprocessed", sample)], id_vcf_muts[!grepl("Preprocessed", sample)])
+
 id_vcf_muts[, `Mutation type` := ifelse(symbol == 16, "SNV", "INDEL")]
 correct_order_muts <- data.table(genc_id_order = unique(id_vcf_muts$genc_id_order), correct_order = match(unique(id_vcf_muts$genc_id_order),unique(id_vcf_structs$genc_id_order)))
-id_vcf_muts <- id_vcf_muts[correct_order_muts, on = "genc_id_order"]
+id_vcf_muts <- merge(id_vcf_muts, correct_order_muts, by="genc_id_order")
 id_vcf_muts[, features := gsub("3'|5'", "", feature)]
 
+# need to correct the order of the genc_ids in the structural datatable
+correct_order_structs <- data.table(genc_id_order = unique(id_vcf_structs$genc_id_order), correct_order = match(unique(id_vcf_structs$genc_id_order),unique(id_vcf_structs$genc_id_order)))
+id_vcf_structs <- merge(id_vcf_structs, correct_order_structs, by="genc_id_order")
+# rename the genc_ids shared between different samples or else ggtranscript will not plot them (each transcript name needs to be unique)
+dup_transcript_names <- id_vcf_structs[, .(transcript_id = unique(transcript_name)), by = c("sample", "cluster")][duplicated(transcript_id)]
+dup_groups <- split(dup_transcript_names, as.character(dup_transcript_names$transcript_id))
+new_transcript_names <- lapply(dup_groups, function(renaming) {
+  renaming[, Idx := .I]
+  renaming[, transcript_id := paste0(transcript_id, ".", Idx)]
+  renaming
+})
+new_names <- do.call('rbind', new_transcript_names)
+id_vcf_structs <- merge(id_vcf_structs, new_names, all = TRUE, by = c("sample", "cluster"))
+id_vcf_structs[, transcript_name := ifelse(is.na(transcript_id), as.character(transcript_name), transcript_id)]
+cds <- id_vcf_structs[type == "CDS"]
+
+
 color_pal <- createPalette(length(unique(cds$feature)),  c("#ff0000", "#00ff00", "#0000ff"))
-feature_colors <- data.table(features = c("In frame ORF", "Out of frame\nORF", as.character(sort(unique(as.numeric(cds$feature)))), "UTR"), color = c("#008000","#808080", color_pal, "#FFFFFF")) 
+feature_colors <- data.table(features = c("In frame ORF", "Out of frame\nORF", as.character(sort(unique(as.numeric(cds$feature)))), "UTR"), color = c("#008000","#808080", color_pal, "#FFFFFF"))
+mutation_colors <- data.table(`Mutation type` = c("SNV", "INDEL"), color = c("#619CFF", "#F8766D"))
 
 struct_plot <- ggplot() + 
-  geom_range(data = id_vcf_structs, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order)), fill = "white", height = 0.25) +
-  geom_range(data = cds, aes(xstart = start, xend = end, y = reorder(transcript_name, genc_id_order), fill = features), alpha = 0.5) +
+  geom_range(data = id_vcf_structs, aes(xstart = start, xend = end, y = reorder(transcript_name, correct_order)), fill = "white", height = 0.25) +
+  geom_range(data = cds, aes(xstart = start, xend = end, y = reorder(transcript_name, correct_order), fill = features), alpha = 0.5) +
   geom_point(data = id_vcf_muts, aes(start, correct_order, colour = `Mutation type`), shape = 16, size = 0.5) +
   geom_rect(data = id_orf_dfs, aes(xmin = start, xmax = end, ymin = correct_order + 0.25, ymax = correct_order + 0.5, fill = orf_frame)) +
   geom_segment(data = min_positions, aes(x = I(-0.2), xend = I(-0.2), y = V1-0.25, yend = max_positions$V1 +0.25), linetype=1, linewidth=0.5) +
   geom_text(data=min_positions, aes(x=I(-0.24), y=(V1-0.25+max_positions$V1+0.25)/2,  label = sample), angle = 90, fontface = "plain", size = 3) +
   scale_fill_manual(values = feature_colors$color, limits = c(feature_colors$features)) + 
+  scale_colour_manual(values = mutation_colors$color, breaks = c(mutation_colors$`Mutation type`)) +
   scale_x_continuous(expand=c(0,0)) +
   scale_y_discrete(expand=c(0,0)) +
   coord_cartesian(xlim = c(0, ceiling(ref_bed_dt$end[nrow(ref_bed_dt)])), clip="off") +
@@ -473,6 +509,7 @@ struct_plot <- ggplot() +
   theme(legend.key=element_rect(colour="black"),legend.background=element_blank()) + 
   theme(aspect.ratio = (0.017544 + 0.081579*length(unique(id_orf_dfs$genc_id)))) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA), ncol = 1), colour = guide_legend(override.aes = list(size = 2), ncol = 1))
+ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
 
 #my_legend <- get_legend(struct_plot + theme_bw() + theme(legend.box.margin = margin(0, 0, 0, 0)))
 
@@ -480,7 +517,6 @@ struct_plot <- ggplot() +
 
 #struct_plot_l <- plot_grid(struct_plot_nl, my_legend, rel_widths = c(5,1), align = 'vh', hjust = -1, nrow = 1)
 
-ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
 
 # , ylim = c(0,20), expand = FALSE # add to coord_cartesian
 # ============================================================================
