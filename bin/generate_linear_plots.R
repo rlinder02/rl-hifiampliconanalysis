@@ -481,7 +481,7 @@ new_transcript_names <- lapply(dup_groups, function(renaming) {
   renaming
 })
 new_names <- do.call('rbind', new_transcript_names)
-if(nrow(new_names) > 0) {
+if(!is.null(new_names)) {
   id_vcf_structs <- merge(id_vcf_structs, new_names, all = TRUE, by = c("sample", "cluster"))
   id_vcf_structs[, transcript_name := ifelse(is.na(transcript_id), as.character(transcript_name), transcript_id)]
 } 
