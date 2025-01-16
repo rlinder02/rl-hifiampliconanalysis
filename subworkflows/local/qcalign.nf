@@ -30,7 +30,7 @@ workflow QCALIGN {
     ALIGNINTRONS ( ch_intron_fasta )
     ch_versions = ch_versions.mix(ALIGNINTRONS.out.versions.first())
 
-    ch_intronless_ref = ALIGNINTRONS.sorted_fasta.combine(ch_ref, by:0)
+    ch_intronless_ref = ALIGNINTRONS.out.sorted_fasta.combine(ch_ref, by:0)
 
     ALIGN ( ch_intronless_ref )
     ch_versions = ch_versions.mix(ALIGN.out.versions.first())
