@@ -16,16 +16,16 @@ workflow FILTERCLUSTERCONSENSUS {
 
     main:
 
-    ch_primer1 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer1] }
-    ch_primer2 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer2] }
-    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
-    ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> 
+    ch_primer1 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, primer1] }
+    ch_primer2 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, primer2] }
+    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, fasta] }
+    ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> 
                                                                             meta = meta.id.split('_').last()
                                                                             def key = meta
                                                                             return tuple(key, bed) }.groupTuple().map {group -> 
                                                                                                                 def (key, values) = group
                                                                                                                 [key, values[0]]} 
-    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
+    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, fastq] }
     ch_extra_fasta = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
                     if (fileType == "fasta") {
