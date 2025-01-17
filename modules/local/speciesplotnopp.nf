@@ -5,14 +5,15 @@ process SPECIESPLOTNOPP {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://docker.io/rlinder02/ggtranscript:v0.0.4':
-        'docker.io/rlinder02/ggtranscript:v0.0.4' }"
+        'https://docker.io/rlinder02/ggtranscript:v0.0.5':
+        'docker.io/rlinder02/ggtranscript:v0.0.5' }"
 
     input:
     tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads), path(orfs)
 
     output:
     tuple val(meta), path("*.png"), emit: png
+    tuple val(meta), path("*.svg"), emit: svg
     tuple val(meta), path("*.bed"), emit: struct_bed, optional: true
     path "versions.yml"           , emit: versions
 
