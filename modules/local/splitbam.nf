@@ -36,7 +36,7 @@ process SPLITBAM {
     cut -f1 | sort | uniq | wc -l > ${prefix}_total_aligned_reads.txt
 
     if [ \$(ls | grep ".bam" | wc -l) -lt 2  ]; then
-        touch $prefix.bam
+        touch ${prefix}.bam
     fi
 
     cat <<-END_VERSIONS > versions.yml
