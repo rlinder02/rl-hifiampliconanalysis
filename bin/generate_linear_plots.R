@@ -345,8 +345,6 @@ cluster_id <- unlist(lapply(gsub("_modified.*", "", vcf_list$V1), function(clust
 
 id_dt <- data.table("sample" = c(sample_names, "wt"), "sample_cluster" = c(base_names, "wildtype"), "cluster_id" = c(cluster_id, "wildtype"), "genc_id" = c(paste0(gene_name, "_", seq(1, length(base_names))), "wildtype_0"), "struct_id" = seq(1, length(base_names)+1))
 id_dt[, IDX := .I ]
-print(id_dt[genc_id == "SMARCA5_11"])
-flush.console()
 modify_by_struct <- lapply(identical_struct_groups, function(struct) {
   id_dt[struct, struct_id := struct_id[1]]
 })
