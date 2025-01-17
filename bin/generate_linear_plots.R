@@ -512,7 +512,7 @@ struct_plot <- ggplot() +
   theme(aspect.ratio = (0.017544 + 0.081579*length(unique(id_orf_dfs$genc_id)))) +
   guides(fill = guide_legend(override.aes = list(shape = NA, border = NA), ncol = 1), colour = guide_legend(override.aes = list(size = 2), ncol = 1))
 ggsave(file = paste0(gene_name, "_transcript_plot.png"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
-
+ggsave(file = paste0(gene_name, "_transcript_plot.svg"), struct_plot, width = 8, height = 9, units = "in", dpi = 350)
 #my_legend <- get_legend(struct_plot + theme_bw() + theme(legend.box.margin = margin(0, 0, 0, 0)))
 
 #struct_plot_nl <- struct_plot + theme(legend.position="none")
