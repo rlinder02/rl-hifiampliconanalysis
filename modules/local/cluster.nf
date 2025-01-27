@@ -4,8 +4,8 @@ process CLUSTER {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1':
-        'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
+        'oras://community.wave.seqera.io/library/bioconductor-decipher_r-data.table:cd147a11c1a929f3':
+        'community.wave.seqera.io/library/bioconductor-decipher_r-data.table:cd147a11c1a929f3' }"
 
     input:
     tuple val(meta), path(fasta), path(bounds)

@@ -42,7 +42,7 @@ clusterize_recurse <- function(dna, cutoff, threads, minCov) {
   cluster_list <- lapply(sort(unique(c1$cluster)), function(clust) {
     rownames(c1)[c1$cluster==clust]
   })
-  # cap at 30 clusters per amplicon sequenced by recursively calling the Clusterize function
+  # cap at 370 clusters per amplicon sequenced by recursively calling the Clusterize function
   if(length(cluster_list) > 70 & cutoff < 0.5) {
     cutoff <- cutoff + 0.05
     print("Next iteration")
@@ -70,23 +70,9 @@ output_name <- strsplit(output_name, "\\.")[[1]][1]
 # ============================================================================
 # use clusterize to cluster similar sequences, with a similarity cutoff based off the median sequence length
 set.seed(123)
-
-#median_width <- median(width(dna)) # round to the nearest hundredth
-#cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)), cutoff = c(0.1, seq(0.2, 0.95, 0.15)))
-#cutoff_dt <- data.table(bp_start = c(0, 501, seq(1001, 5001, 1000)), bp_end = c(500, 1000, seq(2000, 6000, 1000)))
-# edit distance in bp between species for them to be clustered together; even 90% leads to hundreds of clusters for Smarca5
-#num_diffs <- 50 
-# cutoff_dt[, cutoff := 1-round(((bp_end - bp_start)-num_diffs)/(bp_end - bp_start), 2)]
-
-# if(median_width > cutoff_dt$bp_end[nrow(cutoff_dt)]) {
-#   cutoff <- 0.95
-# } else {
-#   find_cutoff <- cutoff_dt[median_width %between% list(bp_start, bp_end)]
-#   cutoff <- find_cutoff$cutoff
-# }
-# cluster sequences that are at least 95% or more similar to one another (previously 90% led to 8 Smarca5 species; 95% led to 107 Smarca5 species)
+# cluster sequences that are at least 90% or more similar to one another 
 cutoff <- 0.1
-# query sequences must overlap the cluster representative with at most 150 bases that don't align to cluster together
+# query sequences must overlap the cluster representative with at most 100 bases that don't align to cluster together
 min_cov <- round((amplicon_length - 100)/amplicon_length, 2)
 
 cluster_list <- clusterize_recurse(dna, cutoff, threads, min_cov)
