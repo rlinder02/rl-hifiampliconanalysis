@@ -6,7 +6,7 @@ include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
-include { SPECIESPLOTS     } from '../../modules/local/speciesplots'
+include { SPECIESPLOTS     } from '../../modules/local/speciesplots/main'
 include { SPECIESPLOTNOPP } from '../../modules/local/speciesplotnopp/main'
 workflow FILTERCLUSTERCONSENSUS {
 
