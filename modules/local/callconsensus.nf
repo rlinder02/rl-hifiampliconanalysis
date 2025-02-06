@@ -131,7 +131,7 @@ process CALLCONSENSUS {
     else
         touch ${prefix}_${cluster_id}_lifted_transanno.bed
         touch ${prefix}_${cluster_id}_modified.vcf.gz
-        
+    fi
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bcftools: \$(bcftools --version | head -1 | sed 's/bcftools //')
