@@ -3,6 +3,11 @@ process SPECIESPLOTNOPP {
     label 'process_low'
     debug true
 
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://docker.io/rlinder02/ggtranscript:v0.0.3':
+        'docker.io/rlinder02/ggtranscript:v0.0.3' }"
+    
     input:
     tuple val(meta), path(vcfs), path(bed), path(bounds), path(total_reads), path(orfs)
 
