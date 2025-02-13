@@ -25,8 +25,7 @@
 10. Call variants ([`bcftools`](https://samtools.github.io/bcftools/bcftools.html))
 11. Call consensus sequences ([`bcftools`](https://samtools.github.io/bcftools/bcftools.html))
 12. Find the longest ORF ([`orfipy`](https://github.com/urmi-21/orfipy))
-13. Plot amplicon species ([`circlize`](https://jokergoo.github.io/circlize_book/book/))
-14. Plot gene structure of each species ([`gsds`](https://gsds.gao-lab.org/index.php))
+13. Plot amplicon species ([`ggtranscript`](https://github.com/dzhang32/ggtranscript))
 
 ## Usage
 
@@ -45,8 +44,6 @@ sample1,data/sample1.fastq.gz,data/reference.fasta,ACTG...,ACTG...,data/referenc
 Each row represents a fastq file (PacBio HiFi), a gene reference file, the sequences of the gene-specific primers used for amplification, and a bed file that has the chromosome and positions of the gene features of interest (introns/exons/UTRs, etc...). The bed file should be derived from the same gene/cDNA sequence as the reference fasta and can be obtained by navigating to the UCSC genome browser, searching for the gene of interest, clicking the Tools dropdown, going to the Table Browser, then selecting the region of interest along with the knownGene table, selecting BED as the output format, select Get output, then selecting and downloading each feature you are interested in, followed by collating all features into a single BED file.
 
 Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
 nextflow run rlinder02/rl-hifiampliconanalysis \
