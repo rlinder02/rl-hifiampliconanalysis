@@ -43,8 +43,15 @@
                 "exists": true,
                 "pattern": "^\\S+\\.bed$",
                 "errorMessage": "Bed file of exon coordinates"
+            },
+            "introns": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.f(ast)?a$",
+                "errorMessage": "Fasta file of intronic sequences"
             }
         },
-        "required": ["sample", "fastq", "fasta", "primer1", "primer2"]
+        "required": ["sample", "fastq", "fasta", "primer1", "primer2", "introns"]
     }
 }

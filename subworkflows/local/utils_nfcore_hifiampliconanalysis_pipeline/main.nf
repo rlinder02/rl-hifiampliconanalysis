@@ -79,8 +79,8 @@ workflow PIPELINE_INITIALISATION {
     Channel
         .fromSamplesheet("input")
         .map {
-            meta, fastq, fasta, primer1, primer2, bed ->
-                    return [ meta, fastq, fasta, primer1, primer2, bed ]
+            meta, fastq, fasta, primer1, primer2, bed, introns ->
+                    return [ meta, fastq, fasta, primer1, primer2, bed, introns ]
             }
         .set { ch_samplesheet }
 

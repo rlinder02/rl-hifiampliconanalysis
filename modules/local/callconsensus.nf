@@ -32,101 +32,106 @@ process CALLCONSENSUS {
     """
     file_name=\$(basename $bam .bam)
     
-    samtools \\
-        view \\
-        $bam \\
-    | \\
-    cut -f1 | sort | uniq | wc -l > ${prefix}_${cluster_id}_aligned_reads.txt
+    if [ -s $bam ]; then
 
-    bcftools \\
-        mpileup \\
-        $args \\
-        --threads $task.cpus \\
-        --max-depth 1000000 \\
-        -L 1000000 \\
-        -X pacbio-ccs \\
-        -Ou \\
-        -f $ref \\
-        $bam \\
-    | \\
-    bcftools \\
-        call \\
-        -m \\
-        -Ou \\
-        --threads $task.cpus \\
-    | \\
-    bcftools \\
-        norm \\
-        -f $ref \\
-        --threads $task.cpus \\
-        -Ou \\
-    | \\
-    bcftools \\
-        filter \\
-        --IndelGap 5 \\
-        -i 'QUAL >= 20 & INFO/DP >= 5' \\
-        -Oz \\
-        -s FAIL \\
-        --threads $task.cpus \\
-        -o ${prefix}_${cluster_id}.vcf.gz
+        samtools \\
+            view \\
+            $bam \\
+        | \\
+        cut -f1 | sort | uniq | wc -l > ${prefix}_${cluster_id}_aligned_reads.txt
 
-    bcftools +setGT \\
-        ${prefix}_${cluster_id}.vcf.gz -- \\
-        -t q \\
-        -i 'AD[:1]/DP>=0.8 & QUAL >= 20 & INFO/DP >= 5' \\
-        -n 'c:1/1' \\
-    | \\
-    bcftools +setGT \\
-        -o ${prefix}_${cluster_id}_modified.vcf.gz \\
-        -- \\
-        -t q \\
-        -i 'AD[:1]/DP<0.8 & QUAL >= 20 & INFO/DP >= 5' \\
-        -n 'c:0/1'
-    tabix -p vcf ${prefix}_${cluster_id}_modified.vcf.gz
-    
-    if [[ \$(zcat ${prefix}_${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 || \$(cat $ref | grep -v '>' | tr -d '\\n' | wc -m) -ne \$(zcat ${prefix}_${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0') ]]
-    then
         bcftools \\
-            consensus \\
-            -a 'N' \\
-            -i 'QUAL >= 20 & INFO/DP >= 5' \\
-            -o ${prefix}_${cluster_id}.fasta \\
+            mpileup \\
+            $args \\
+            --threads $task.cpus \\
+            --max-depth 1000000 \\
+            -L 1000000 \\
+            -X pacbio-ccs \\
+            -Ou \\
             -f $ref \\
-            -H I \\
-            ${prefix}_${cluster_id}_modified.vcf.gz
+            $bam \\
+        | \\
+        bcftools \\
+            call \\
+            -m \\
+            -Ou \\
+            --threads $task.cpus \\
+        | \\
+        bcftools \\
+            norm \\
+            -f $ref \\
+            --threads $task.cpus \\
+            -Ou \\
+        | \\
+        bcftools \\
+            filter \\
+            --IndelGap 5 \\
+            -i 'QUAL >= 20 & INFO/DP >= 5' \\
+            -Oz \\
+            -s FAIL \\
+            --threads $task.cpus \\
+            -o ${prefix}_${cluster_id}.vcf.gz
+
+        bcftools +setGT \\
+            ${prefix}_${cluster_id}.vcf.gz -- \\
+            -t q \\
+            -i 'AD[:1]/DP>=0.8 & QUAL >= 20 & INFO/DP >= 5' \\
+            -n 'c:1/1' \\
+        | \\
+        bcftools +setGT \\
+            -o ${prefix}_${cluster_id}_modified.vcf.gz \\
+            -- \\
+            -t q \\
+            -i 'AD[:1]/DP<0.8 & QUAL >= 20 & INFO/DP >= 5' \\
+            -n 'c:0/1'
+        tabix -p vcf ${prefix}_${cluster_id}_modified.vcf.gz
         
-        cat ${prefix}_${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' | sed 's/>.*/>${prefix}_${cluster_id}/' > ${prefix}_${cluster_id}_modified.fasta
+        if [[ \$(zcat ${prefix}_${cluster_id}_modified.vcf.gz | grep 'PASS' | grep -c 'AC=') -gt 0 || \$(cat $ref | grep -v '>' | tr -d '\\n' | wc -m) -ne \$(zcat ${prefix}_${cluster_id}_modified.vcf.gz | grep -v '#' | grep -vc 'DP=0') ]]
+        then
+            bcftools \\
+                consensus \\
+                -a 'N' \\
+                -i 'QUAL >= 20 & INFO/DP >= 5' \\
+                -o ${prefix}_${cluster_id}.fasta \\
+                -f $ref \\
+                -H I \\
+                ${prefix}_${cluster_id}_modified.vcf.gz
+            
+            cat ${prefix}_${cluster_id}.fasta | tr -d 'N' | tr -d '\\n' | sed 's/_cDA/_cDA\\n/g' | sed 's/>.*/>${prefix}_${cluster_id}/' > ${prefix}_${cluster_id}_modified.fasta
+            
+            orfipy \\
+                ${prefix}_${cluster_id}_modified.fasta \\
+                --bed ${prefix}_${cluster_id}.bed \\
+                --outdir orfipy \\
+                --procs $task.cpus
+
+            minimap2 \\
+                -c \\
+                --cs \\
+                ${prefix}_${cluster_id}.fasta \\
+                ${prefix}_${cluster_id}_modified.fasta \\
+                -o ${prefix}_${cluster_id}_modified.paf
+
+            transanno minimap2chain \\
+                ${prefix}_${cluster_id}_modified.paf \\
+                --output ${prefix}_${cluster_id}_modified.chain
+
+            transanno liftbed \\
+                --chain ${prefix}_${cluster_id}_modified.chain \\
+                --output ${prefix}_${cluster_id}_lifted_transanno.bed \\
+                orfipy/${prefix}_${cluster_id}.bed
         
-        orfipy \\
-            ${prefix}_${cluster_id}_modified.fasta \\
-            --bed ${prefix}_${cluster_id}.bed \\
-            --outdir orfipy \\
-            --procs $task.cpus
-
-        minimap2 \\
-            -c \\
-            --cs \\
-            ${prefix}_${cluster_id}.fasta \\
-            ${prefix}_${cluster_id}_modified.fasta \\
-            -o ${prefix}_${cluster_id}_modified.paf
-
-        transanno minimap2chain \\
-            ${prefix}_${cluster_id}_modified.paf \\
-            --output ${prefix}_${cluster_id}_modified.chain
-
-        transanno liftbed \\
-            --chain ${prefix}_${cluster_id}_modified.chain \\
-            --output ${prefix}_${cluster_id}_lifted_transanno.bed \\
-            orfipy/${prefix}_${cluster_id}.bed
-    
+        else
+            orfipy \\
+                $ref \\
+                --bed ${prefix}_${cluster_id}.bed \\
+                --outdir orfipy \\
+                --procs $task.cpus
+        fi
     else
-        orfipy \\
-            $ref \\
-            --bed ${prefix}_${cluster_id}.bed \\
-            --outdir orfipy \\
-            --procs $task.cpus
+        touch ${prefix}_${cluster_id}_lifted_transanno.bed
+        touch ${prefix}_${cluster_id}_modified.vcf.gz
     fi
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bcftools: \$(bcftools --version | head -1 | sed 's/bcftools //')

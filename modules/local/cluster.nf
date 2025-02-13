@@ -4,11 +4,11 @@ process CLUSTER {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1':
-        'docker.io/rlinder02/deciphergvizmsadatatable:v0.0.1' }"
+        'oras://community.wave.seqera.io/library/bioconductor-decipher_r-data.table:cd147a11c1a929f3':
+        'community.wave.seqera.io/library/bioconductor-decipher_r-data.table:cd147a11c1a929f3' }"
 
     input:
-    tuple val(meta), path(fasta)
+    tuple val(meta), path(fasta), path(bounds)
 
     output:
     tuple val(meta), path("*_consensus.fasta"), emit: consensus_fasta
@@ -21,7 +21,7 @@ process CLUSTER {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    generate_clusters.R $fasta $task.cpus
+    generate_clusters.R $fasta $task.cpus $bounds
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

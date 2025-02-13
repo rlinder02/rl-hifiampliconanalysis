@@ -6,8 +6,8 @@ include { TAGBAM           } from '../../modules/local/tagbam'
 include { SPLITBAM         } from '../../modules/local/splitbam'
 include { CALLCONSENSUS    } from '../../modules/local/callconsensus'
 include { CALLCONSENSUSPP  } from '../../modules/local/callconsensuspp'
-include { CIRCOS           } from '../../modules/local/circos'
-
+include { SPECIESPLOTS     } from '../../modules/local/speciesplots/main'
+include { SPECIESPLOTNOPP } from '../../modules/local/speciesplotnopp/main'
 workflow FILTERCLUSTERCONSENSUS {
 
     take:
@@ -16,16 +16,16 @@ workflow FILTERCLUSTERCONSENSUS {
 
     main:
 
-    ch_primer1 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer1] }
-    ch_primer2 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, primer2] }
-    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
-    ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> 
+    ch_primer1 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, primer1] }
+    ch_primer2 = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, primer2] }
+    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, fasta] }
+    ch_bed = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> 
                                                                             meta = meta.id.split('_').last()
                                                                             def key = meta
                                                                             return tuple(key, bed) }.groupTuple().map {group -> 
                                                                                                                 def (key, values) = group
                                                                                                                 [key, values[0]]} 
-    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
+    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, fastq] }
     ch_extra_fasta = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
                     if (fileType == "fasta") {
@@ -48,7 +48,10 @@ workflow FILTERCLUSTERCONSENSUS {
     FINDPRIMERS ( ch_fasta_primer1_primer2 )
     ch_versions = ch_versions.mix(FINDPRIMERS.out.versions.first())
 
-    CLUSTER ( FINDPRIMERS.out.filtered_fasta )
+    ch_find_primers_bounds = FINDPRIMERS.out.filtered_fasta.combine(BOUNDARIES.out.txt, by:0)
+    ch_find_primers_bounds.view()
+
+    CLUSTER ( ch_find_primers_bounds )
     ch_versions = ch_versions.mix(CLUSTER.out.versions.first())
 
     ch_clusters_ref = CLUSTER.out.consensus_fasta.combine(ch_ref, by:0)
@@ -106,6 +109,16 @@ workflow FILTERCLUSTERCONSENSUS {
                                     meta = meta.id.split('_').last()
                                     def key = meta
                                     return tuple(key, txt) }.groupTuple()
+
+    ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
+                                                            def files = clusters + pps
+                                                            return tuple(meta, files) }
+
+   
+    ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
+                                                            def files = clusters + pps
+                                                            return tuple(meta, files)}
+
     ch_bounds = BOUNDARIES.out.txt.map { meta, txt -> 
                                     meta = meta.id.split('_').last()
                                     def key = meta
@@ -113,26 +126,25 @@ workflow FILTERCLUSTERCONSENSUS {
                                                                         def (key, values) = group
                                                                         [key, values[0]]}
 
-    ch_vcfs_all = ch_vcfs.combine(ch_vcfs_pp, by:0).map {meta, clusters, pps -> 
-                                                            def files = clusters + pps
-                                                            return tuple(meta, files) }
-
-    ch_orf_beds_all = ch_orf_beds_not_ref.combine(ch_orf_beds_pp_not_ref, by:0).map {meta, clusters, pps ->
-                                                            def files = clusters + pps
-                                                            return tuple(meta, files)}
-    
     ch_vcfs_bed = ch_vcfs_all.combine(ch_bed, by:0)
     ch_vcfs_bed_bounds = ch_vcfs_bed.combine(ch_bounds, by:0)
     ch_vcfs_bed_bounds_reads = ch_vcfs_bed_bounds.combine(ch_total_reads, by:0)
     ch_vcfs_bed_bounds_reads_orfs = ch_vcfs_bed_bounds_reads.combine(ch_orf_beds_all, by:0)
- 
-    CIRCOS ( ch_vcfs_bed_bounds_reads_orfs )
-    ch_versions = ch_versions.mix(CIRCOS.out.versions.first())
+    
+    SPECIESPLOTS ( ch_vcfs_bed_bounds_reads_orfs )
+    ch_versions = ch_versions.mix(SPECIESPLOTS.out.versions.first())
 
-    // create a module to combine tables of amplicon structure and mutations from the CIRCOS module across samples from the same gene to find the same species across samples 
+    // if no processed pseudogenes, then run separately 
+    ch_vcfs_bed2 = ch_vcfs.combine(ch_bed, by:0)
+    ch_vcfs_bed_bounds2 = ch_vcfs_bed2.combine(ch_bounds, by:0)
+    ch_vcfs_bed_bounds_reads2 = ch_vcfs_bed_bounds2.combine(ch_total_reads, by:0)
+    ch_vcfs_bed_bounds_reads_orfs2 = ch_vcfs_bed_bounds_reads2.combine(ch_orf_beds_not_ref, by:0)
+
+    SPECIESPLOTNOPP ( ch_vcfs_bed_bounds_reads_orfs2 )
+    ch_versions = ch_versions.mix(SPECIESPLOTNOPP.out.versions.first())
 
     emit:
-    fasta      = FINDPRIMERS.out.filtered_fasta  // channel: [ val(meta), [ fasta ] ]
+    fasta    = FINDPRIMERS.out.filtered_fasta    // channel: [ val(meta), [ fasta ] ]
     versions = ch_versions                       // channel: [ versions.yml ]
 }
 

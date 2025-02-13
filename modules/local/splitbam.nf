@@ -11,7 +11,7 @@ process SPLITBAM {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.bam"), emit: bams
+    tuple val(meta), path("*.bam"), emit: bams, optional: true
     tuple val(meta), path("*.txt"), emit: txt
     path "versions.yml"           , emit: versions
 
@@ -34,6 +34,10 @@ process SPLITBAM {
         $bam \\
     | \\
     cut -f1 | sort | uniq | wc -l > ${prefix}_total_aligned_reads.txt
+
+    if [ \$(ls | grep ".bam" | wc -l) -lt 2  ]; then
+        touch ${prefix}.bam
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

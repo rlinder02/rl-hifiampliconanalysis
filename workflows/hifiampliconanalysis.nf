@@ -27,8 +27,9 @@ workflow HIFIAMPLICONANALYSIS {
     
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
-    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fasta] }
-    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed -> [meta, fastq] }
+    ch_ref = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, fasta] }
+    ch_introns = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, introns] }
+    ch_fastq = ch_samplesheet.map { meta, fastq, fasta, primer1, primer2, bed, introns -> [meta, fastq] }
     // only process fastq.gz or fq.gz files (reads); fasta files get processed later
     ch_fastq_only = ch_fastq.map { meta, file -> 
                     def fileType = file.name.toString().split('/').last().split('\\.').last()
@@ -41,7 +42,8 @@ workflow HIFIAMPLICONANALYSIS {
     // SUBWORKFLOW: Align HiFi reads to gene-specific genome and run QC on raw and aligned reads
     //
     QCALIGN ( ch_fastq_only,
-                ch_ref
+                ch_ref,
+                ch_introns
             )
 
     ch_multiqc_files = ch_multiqc_files.mix(QCALIGN.out.nanostats_report.map {it[1]})

@@ -1,0 +1,3 @@
+sample,fastq,fasta,primer1,primer2,bed,introns
+Hu-NeuN-_FTLD_MAPT,data/HU_PCR_MAPT_AMPLICON_FTLD_CBD_NEGATIVE_CTL-m64098_240918_181312.hifi.bc1016.fastq.gz,data/hMAPT_cDNA.fasta,ACTGAGGACGGATCTGAGGA,GGTTCTCAGTGGAGCCGATC,data/hMAPT_cDNA_full.bed,data/hMAPT_introns.fasta
+HU-NeuN+_FTLD_MAPT,data/HU_PCR_MAPT_AMPLICON_FTLD_CBD_POSITIVE-m64098_240918_181312.hifi.bc1015.fastq.gz,data/hMAPT_cDNA.fasta,ACTGAGGACGGATCTGAGGA,GGTTCTCAGTGGAGCCGATC,data/hMAPT_cDNA_full.bed,data/hMAPT_introns.fasta
