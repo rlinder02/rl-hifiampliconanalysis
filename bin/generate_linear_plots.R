@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-vcfs <- "vcf_fofn.txt"
-bed <- "mSmarca5_cDNA_full.bed"
-bounds <- "mSmarca5_cDNA.txt"
-total_reads <- "total_reads_fofn.txt"
-gene_name <- "mSmarca5"
-orfs <- "orf_fofn.txt"
+# vcfs <- "vcf_fofn.txt"
+# bed <- "mSmarca5_cDNA_full.bed"
+# bounds <- "mSmarca5_cDNA.txt"
+# total_reads <- "total_reads_fofn.txt"
+# gene_name <- "mSmarca5"
+# orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
@@ -52,7 +52,7 @@ library(cowplot)
 options(digits = 10)
 projectDir <- getwd()
 
-setwd("/Users/roblinder/Documents/GitHub_repos/hifiampliconanalysis_ts")
+#setwd("/Users/roblinder/Documents/GitHub_repos/hifiampliconanalysis_ts")
 
 
 # ============================================================================
