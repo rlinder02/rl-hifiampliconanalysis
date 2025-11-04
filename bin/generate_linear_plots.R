@@ -29,12 +29,12 @@ orfs <- args[6]
 # ============================================================================
 # For trouble-shooting locally
 
-# vcfs <- "vcf_fofn.txt"
-# bed <- "hMAPT_cDNA_full.bed"
-# bounds <- "hMAPT_cDNA.txt"
-# total_reads <- "total_reads_fofn.txt"
-# gene_name <- "MAPT"
-# orfs <- "orf_fofn.txt"
+vcfs <- "vcf_fofn.txt"
+bed <- "mSmarca5_cDNA_full.bed"
+bounds <- "mSmarca5_cDNA.txt"
+total_reads <- "total_reads_fofn.txt"
+gene_name <- "mSmarca5"
+orfs <- "orf_fofn.txt"
 
 
 # ============================================================================
@@ -52,12 +52,11 @@ library(cowplot)
 options(digits = 10)
 projectDir <- getwd()
 
-#setwd("/Users/rlinder/Library/CloudStorage/OneDrive-SanfordBurnhamPrebysMedicalDiscoveryInstitute/Chun_lab/Projects/gencDNA/PCR_Southerns/Human/MAPT/2025-01-14_run")
+setwd("/Users/roblinder/Documents/GitHub_repos/hifiampliconanalysis_ts")
 
 
 # ============================================================================
 # Custom functions
-
 pre.process.bed <- function(bed_file, bounds_file) {
   ref_bounds_dt <- fread(bounds_file)
   ref_bed_dt <- fread(bed_file)
@@ -73,7 +72,7 @@ pre.process.bed <- function(bed_file, bounds_file) {
   ref_bed_dt[, feature := gsub("CDS_", "", V1)]
   columns <- c("feature", "start", "end")
   ref_bed_dt <- ref_bed_dt[, ..columns]
-  # limit plotting to primer bounds; change so limit plotting to CDS only if ORFs not included in primer bounds
+  # limit plotting to primer bounds; change so limit plotting to CDS only if UTRs not included in primer bounds
   if(ref_bounds_dt$V1[1] < ref_bed_dt$end[1]) {
     start_row <- 1
     ref_bed_dt$start[1] <- ref_bounds_dt$V1[1]
@@ -203,15 +202,20 @@ pre.process.orf <- function(orf_file, vcf_file, ref_bed_dt) {
   orf_dt_cds_longest <- orf_dt_cds[order(-length)][1]
   # find out if longest CDS orf is in-frame
   in_frame <- FALSE
-  if((orf_dt_cds_longest$V2 - (ref_bed_dt$start[ref_bed_dt$feature == "1"][1])) %% 3 == 0) {
-    in_frame <- TRUE
-  } 
-  expanded_dt <- data.table(POS = orf_dt_cds_longest$V2:orf_dt_cds_longest$V3, strand = orf_dt_cds_longest$V6, in_frame = in_frame)
-  expanded_dt[vcf_dt_structure, on=.(POS >= start, POS <= end), c("feature", "runs", "in_frame") := .(i.feature, i.runs, in_frame)]
-  expanded_dt <- expanded_dt[!is.na(feature)]
-  expanded_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
-  struct_columns <- c("feature", "start", "end", "strand", "in_frame")
-  expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
+  # If there is no valid ORF, create an empty data-frame as filler to prevent errors popping up downstream
+  if(!is.na(orf_dt_cds_longest$V1)) {
+    if((orf_dt_cds_longest$V2 - (ref_bed_dt$start[ref_bed_dt$feature == "1"][1])) %% 3 == 0) {
+      in_frame <- TRUE
+    } 
+    expanded_dt <- data.table(POS = orf_dt_cds_longest$V2:orf_dt_cds_longest$V3, strand = orf_dt_cds_longest$V6, in_frame = in_frame)
+    expanded_dt[vcf_dt_structure, on=.(POS >= start, POS <= end), c("feature", "runs", "in_frame") := .(i.feature, i.runs, in_frame)]
+    expanded_dt <- expanded_dt[!is.na(feature)]
+    expanded_dt[, c("start", "end") := .(min(POS), max(POS)), by = c("runs", "feature")]
+    struct_columns <- c("feature", "start", "end", "strand", "in_frame")
+    expanded_dt_struct <- unique(expanded_dt[, ..struct_columns])
+  } else {
+    expanded_dt_struct <- data.table(feature = as.character(NA), start = as.integer(NA), end = as.integer(NA), strand = as.character(NA), in_frame = NA)
+  }
   cluster_id <- strsplit(gsub(".bed", "", orf_file), "_")[[1]]
   cluster_id <- cluster_id[length(cluster_id)-2]
   expanded_dt_struct[, c("sample", "cluster") := .(gsub("_cluster.*|_pp.*", "", orf_file), cluster_id)]
@@ -309,7 +313,8 @@ total_reads_dfs <- lapply(total_reads_list$V1, function(depth) {
 })
 total_reads_dfs <- do.call('rbind', total_reads_dfs)
 
-orf_dfs <- Map(pre.process.orf, orf_list$V1, vcf_list$V1, rep(list(ref_bed_dt), length(vcf_list$V1)))
+orf_dfs <- Map(pre.process.orf, orf_list$V1, vcf_list$V1, rep(list(ref_bed_dt), length(vcf_list$V1))) 
+## error occurs here 
 
 vcf_structs <- lapply(vcf_list$V1, function(vcf) {
   vcf_struct_df <- pre.process.vcf.structure(vcf, ref_bed_dt)

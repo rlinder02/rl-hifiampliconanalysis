@@ -1,2 +1,2 @@
 sample,fastq,fasta,primer1,primer2,bed,introns
-Brandon-test,data/Brandon_test-m84137_250312_192544_s1.hifi_reads.bam.hfix.1M.fastq.gz,data/mSmarca5_cDNA.fasta,AGGTCTCACTCCTCCGGC,AGACCCGTAAATTAAAGAACTACCA,data/mSmarca5_cDNA_full.bed,data/mSmarca5_introns.fasta
+Brandon_test,data/Brandon_test-m84137_250312_192544_s1.hifi_reads.bam.hfix.1M.fastq.gz,data/mSmarca5_cDNA.fasta,AGGTCTCACTCCTCCGGC,AGACCCGTAAATTAAAGAACTACCA,data/mSmarca5_cDNA_full.bed,data/mSmarca5_introns.fasta
